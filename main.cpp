@@ -17,6 +17,9 @@ void render() {
 
   const Sphere sphere = {Vec3f(100, 200, 100), 50};
 
+
+  // Draw gradient background
+  // RGB(0 - 1 (height), 0 - 1 (width), 0)
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
       framebuffer[i + j * width] =
@@ -24,10 +27,11 @@ void render() {
     }
   }
 
+  // Draw Sphere
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      const int ds = (j - sphere.pos[0]) * (j - sphere.pos[0]) +
-                     (i - sphere.pos[1]) * (i - sphere.pos[1]);
+      const int ds = (j - sphere.pos[1]) * (j - sphere.pos[1]) +
+                     (i - sphere.pos[0]) * (i - sphere.pos[0]);
 
       if (ds <= sphere.radius * sphere.radius) {
         framebuffer[i + j * width] = Vec3f(0.5f, 0.5f, 0.5f);
