@@ -1,27 +1,14 @@
 #include <cmath>
-#include <fstream>
-#include <iostream>
 #include <limits>
 #include <vector>
 
 #include "geometry.h"
+#include "utils.h"
 
 struct Sphere {
   Vec3f pos;
   int radius;
 };
-
-void save(std::vector<Vec3f> framebuffer, int width, int height) {
-  std::ofstream ofs;  // save the framebuffer to file
-  ofs.open("./build/out.ppm");
-  ofs << "P6\n" << width << " " << height << "\n255\n";
-  for (size_t i = 0; i < height * width; ++i) {
-    for (size_t j = 0; j < 3; j++) {
-      ofs << (char)(255 * std::max(0.f, std::min(1.f, framebuffer[i][j])));
-    }
-  }
-  ofs.close();
-}
 
 void render() {
   const int width = 1024;
@@ -48,17 +35,7 @@ void render() {
     }
   }
 
-
   save(framebuffer, width, height);
-  // std::ofstream ofs;  // save the framebuffer to file
-  // ofs.open("./build/out.ppm");
-  // ofs << "P6\n" << width << " " << height << "\n255\n";
-  // for (size_t i = 0; i < height * width; ++i) {
-  //   for (size_t j = 0; j < 3; j++) {
-  //     ofs << (char)(255 * std::max(0.f, std::min(1.f, framebuffer[i][j])));
-  //   }
-  // }
-  // ofs.close();
 }
 
 int main() {
