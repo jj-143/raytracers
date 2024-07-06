@@ -42,12 +42,20 @@ void render() {
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
 
-  const Sphere sphere = {Vec3f(.3, .2, -2), 0.2};
+  const Sphere sphere1 = {Vec3f(.3, .2, -2), 0.2};
+  const Sphere sphere2 = {Vec3f(-.2, .1, -2), 0.3};
+  const Sphere sphere3 = {Vec3f(.3, -.1, -3), 0.2};
+
+  const std::vector<Sphere> spheres = {sphere1, sphere2, sphere3};
+  const std::vector<Vec3f> colors = {
+      Vec3f(.8, .6, .2),
+      Vec3f(.3, .3, .5),
+      Vec3f(.1, .6, .7),
+  };
 
   float min = 10000;
   float max = 0;
 
-  // Depth Pass
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
       float x = (2 * (i + 0.5) / (float)width - 1) * tan(fov / 2.);
@@ -56,23 +64,16 @@ void render() {
 
       Vec3f dir = Vec3f(x, y, -1).normalize();
 
-      float t0 = 0;
-      bool hit = sphere.ray_intersect(Vec3f(0, 0, 0), dir, t0);
-      if (hit) {
-        depthbuffer[i + j * width] = t0;
-        min = std::min(min, t0);
-        max = std::max(max, t0);
-      }
-    }
-  }
-
-  // Normalize Depth Pass & Draw
-  for (size_t j = 0; j < height; j++) {
-    for (size_t i = 0; i < width; i++) {
-      int idx = i + j * width;
-      if (depthbuffer[idx] > 0) {
-        float val = (depthbuffer[idx] - min) / (max - min);
-        framebuffer[idx] = Vec3f(1 - val, 1 - val, 1 - val);
+      for (size_t idx = 0; idx < 3; idx++) {
+        const Sphere sphere = spheres[idx];
+        float t0 = 0;
+        bool hit = sphere.ray_intersect(Vec3f(0, 0, 0), dir, t0);
+        if (hit) {
+          framebuffer[i + j * width] = colors[idx];
+          depthbuffer[i + j * width] = t0;
+          min = std::min(min, t0);
+          max = std::max(max, t0);
+        }
       }
     }
   }
