@@ -32,6 +32,11 @@ struct Sphere {
   }
 };
 
+struct PointLight {
+  Vec3f pos;
+  float intensity;
+};
+
 void render() {
   const int width = 1024;
   const int height = 768;
@@ -41,6 +46,8 @@ void render() {
 
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
+
+  const PointLight light = {Vec3f(-.2, 0, 0), 1};
 
   const Sphere sphere1 = {Vec3f(.3, .2, -2), 0.2};
   const Sphere sphere2 = {Vec3f(-.2, .1, -2), 0.3};
@@ -69,7 +76,14 @@ void render() {
         float t0 = 0;
         bool hit = sphere.ray_intersect(Vec3f(0, 0, 0), dir, t0);
         if (hit) {
-          framebuffer[i + j * width] = colors[idx];
+          Vec3f n = (dir * t0 - sphere.pos) * (1 / (sphere.radius * sqrtf(2)));
+          Vec3f r =
+              ((dir + n) * 2 - (dir * t0)).normalize();  // already normalized;
+          Vec3f dir_light = (light.pos - dir * t0).normalize();
+
+          float intensity = std::max(0.f, r * dir_light) * light.intensity;
+
+          framebuffer[i + j * width] = colors[idx] * intensity;
           depthbuffer[i + j * width] = t0;
           min = std::min(min, t0);
           max = std::max(max, t0);
