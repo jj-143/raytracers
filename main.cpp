@@ -47,11 +47,13 @@ void render() {
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
 
-  const PointLight light = {Vec3f(-.2, 0, 0), 1};
+  const PointLight light = {Vec3f(-.8, -1, 0), 1};
 
   const Sphere sphere1 = {Vec3f(.3, .2, -2), 0.2};
   const Sphere sphere2 = {Vec3f(-.2, .1, -2), 0.3};
   const Sphere sphere3 = {Vec3f(.3, -.1, -3), 0.2};
+
+  const float material_specular = 50;
 
   const std::vector<Sphere> spheres = {sphere1, sphere2, sphere3};
   const std::vector<Vec3f> colors = {
@@ -63,6 +65,7 @@ void render() {
   float min = 10000;
   float max = 0;
 
+  // Render Pass
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
       float x = (2 * (i + 0.5) / (float)width - 1) * tan(fov / 2.);
@@ -76,12 +79,10 @@ void render() {
         float t0 = 0;
         bool hit = sphere.ray_intersect(Vec3f(0, 0, 0), dir, t0);
         if (hit) {
-          Vec3f n = (dir * t0 - sphere.pos) * (1 / (sphere.radius * sqrtf(2)));
-          Vec3f r =
-              ((dir + n) * 2 - (dir * t0)).normalize();  // already normalized;
+          Vec3f n = (dir * t0 - sphere.pos) * (1 / (sphere.radius));
           Vec3f dir_light = (light.pos - dir * t0).normalize();
 
-          float intensity = std::max(0.f, r * dir_light) * light.intensity;
+          float intensity = std::max(0.f, n * dir_light) * light.intensity;
 
           framebuffer[i + j * width] = colors[idx] * intensity;
           depthbuffer[i + j * width] = t0;
