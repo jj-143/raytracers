@@ -80,11 +80,16 @@ void render() {
         bool hit = sphere.ray_intersect(Vec3f(0, 0, 0), dir, t0);
         if (hit) {
           Vec3f n = (dir * t0 - sphere.pos) * (1 / (sphere.radius));
+          Vec3f r = (dir + n * ((dir * n) * -2));
           Vec3f dir_light = (light.pos - dir * t0).normalize();
 
-          float intensity = std::max(0.f, n * dir_light) * light.intensity;
+          float diff_intensity = std::max(0.f, n * dir_light) * light.intensity;
 
-          framebuffer[i + j * width] = colors[idx] * intensity;
+          float spec_intensity =
+              powf(std::max(0.f, r * dir_light), material_specular) *
+              light.intensity;
+
+          framebuffer[i + j * width] = colors[idx] * diff_intensity;
           depthbuffer[i + j * width] = t0;
           min = std::min(min, t0);
           max = std::max(max, t0);
