@@ -47,19 +47,19 @@ void render() {
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
 
-  const PointLight light = {Vec3f(-.8, -1, 0), 1};
+  const PointLight light = {Vec3f(0, -1.2, -0.5), 1.1};
 
-  const Sphere sphere1 = {Vec3f(.3, .2, -2), 0.2};
-  const Sphere sphere2 = {Vec3f(-.2, .1, -2), 0.3};
-  const Sphere sphere3 = {Vec3f(.3, -.1, -3), 0.2};
+  const Sphere sphere1 = {Vec3f(.2, .2, -2.3), 0.2};
+  const Sphere sphere2 = {Vec3f(-.2, -.1, -2), 0.25};
+  const Sphere sphere3 = {Vec3f(.1, -.3, -1.7), 0.1};
 
   const float material_specular = 50;
 
   const std::vector<Sphere> spheres = {sphere1, sphere2, sphere3};
   const std::vector<Vec3f> colors = {
-      Vec3f(.8, .6, .2),
-      Vec3f(.3, .3, .5),
-      Vec3f(.1, .6, .7),
+      Vec3f(.8, .2, .2),
+      Vec3f(.2, .8, .2),
+      Vec3f(.2, .2, .8),
   };
 
   float min = 10000;
@@ -78,22 +78,45 @@ void render() {
         const Sphere sphere = spheres[idx];
         float t0 = 0;
         bool hit = sphere.ray_intersect(Vec3f(0, 0, 0), dir, t0);
-        if (hit) {
-          Vec3f n = (dir * t0 - sphere.pos) * (1 / (sphere.radius));
-          Vec3f r = (dir + n * ((dir * n) * -2));
-          Vec3f dir_light = (light.pos - dir * t0).normalize();
+        if (!hit) continue;
 
-          float diff_intensity = std::max(0.f, n * dir_light) * light.intensity;
+        Vec3f n = (dir * t0 - sphere.pos) * (1 / (sphere.radius));
+        Vec3f r = (dir + n * ((dir * n) * -2));
+        Vec3f dir_light = (light.pos - dir * t0).normalize();
 
-          float spec_intensity =
-              powf(std::max(0.f, r * dir_light), material_specular) *
-              light.intensity;
+        float diff_intensity = std::max(0.f, n * dir_light) * light.intensity;
 
-          framebuffer[i + j * width] = colors[idx] * diff_intensity;
-          depthbuffer[i + j * width] = t0;
-          min = std::min(min, t0);
-          max = std::max(max, t0);
+        float spec_intensity =
+            powf(std::max(0.f, r * dir_light), material_specular) *
+            light.intensity;
+
+        // shadow
+        // check if other object occlude the ray to the light
+        bool occluded = false;
+        for (size_t sp_i = 0; sp_i < spheres.size(); sp_i++) {
+          if (idx == sp_i) continue;
+          const Sphere other = spheres[sp_i];
+          float dist = 0;
+          const Vec3f shadow_orig =
+              dir_light * n < 0 ? dir * t0 - n * 1e-3 : dir * t0 + n * 1e-3;
+          if (other.ray_intersect(shadow_orig, dir_light, dist)) {
+            occluded = true;
+            break;
+          }
         }
+        if (occluded) continue;
+
+        float shadow_factor = occluded ? 0.25 : 1;
+
+        framebuffer[i + j * width] =
+            colors[idx] * (diff_intensity + spec_intensity);
+
+        framebuffer[i + j * width] =
+            colors[idx] * (diff_intensity + spec_intensity);
+
+        depthbuffer[i + j * width] = t0;
+        min = std::min(min, t0);
+        max = std::max(max, t0);
       }
     }
   }
