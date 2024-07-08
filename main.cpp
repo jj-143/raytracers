@@ -12,13 +12,23 @@
 #include "geometry.h"
 #include "utils.h"
 
-struct Sphere {
+class Mesh {
+ public:
   Vec3f pos;
+  virtual bool ray_intersect(const Vec3f &orig, const Vec3f &dir,
+                             float &t0) const {
+    return false;
+  }
+
+  Mesh(const Vec3f pos) : pos(pos) {}
+};
+
+class Sphere : public Mesh {
+ public:
   float radius;
 
-  Sphere(const Vec3f p, float r) : pos(p), radius(r) {}
-
-  bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0) const {
+  bool ray_intersect(const Vec3f &orig, const Vec3f &dir,
+                     float &t0) const override {
     Vec3f L = (pos - orig);
     float tca = L * dir;
     float d2 = L * L - tca * tca;
@@ -32,6 +42,16 @@ struct Sphere {
     if (t0 < 0) return false;
     return true;
   }
+
+  Sphere(const Vec3f p, const float r) : Mesh(p), radius(r) {}
+};
+
+class Object {
+ public:
+  Mesh *target;
+  Vec3f color;
+
+  Object(Mesh &m, const Vec3f c) : target(&m), color(c) {}
 };
 
 struct PointLight {
@@ -39,20 +59,15 @@ struct PointLight {
   float intensity;
 };
 
-struct Object {
-  Sphere target;
-  Vec3f color;
-};
-
 bool scene_intersect(const Vec3f &origin, const Vec3f &dir,
                      const std::vector<Object> &objects, Vec3f &hit, Vec3f &N,
                      Object &object) {
   float t0 = 0;
-  for (size_t i = 0; i < 3; i++) {
-    const Sphere sphere = objects[i].target;
-    if (sphere.ray_intersect(origin, dir, t0)) {
+  for (size_t i = 0; i < objects.size(); i++) {
+    Mesh *mesh = objects[i].target;
+    if (mesh->ray_intersect(origin, dir, t0)) {
       hit = dir * t0 + origin;
-      N = (hit - sphere.pos).normalize();
+      N = (hit - mesh->pos).normalize();
       object = objects[i];
       return true;
     }
@@ -76,9 +91,15 @@ void render() {
   lights.push_back({Vec3f(-.2, -1.4, -0.5), 0.3});
 
   std::vector<Object> objects;
-  objects.push_back({Sphere(Vec3f(.2, .2, -2.3), 0.2), Vec3f(.8, .2, .2)});
-  objects.push_back({Sphere(Vec3f(-.2, -.1, -2), 0.25), Vec3f(.2, .8, .2)});
-  objects.push_back({Sphere(Vec3f(.1, -.3, -1.7), 0.1), Vec3f(.2, .2, .8)});
+
+  Sphere s1 = {Vec3f(.2, .2, -2.3), 0.2};
+  Sphere s2 = {Vec3f(-.2, -.1, -2), 0.25};
+  Sphere s3 = {Vec3f(.1, -.3, -1.7), 0.1};
+
+  objects.push_back({s1, Vec3f(.8, .2, .2)});
+  objects.push_back({s2, Vec3f(.2, .8, .2)});
+  objects.push_back({s3, Vec3f(.2, .2, .8)});
+
   const float material_specular = 50;
 
   float min = 10000;
