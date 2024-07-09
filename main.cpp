@@ -15,8 +15,8 @@
 class Mesh {
  public:
   Vec3f pos;
-  virtual bool ray_intersect(const Vec3f &orig, const Vec3f &dir,
-                             float &t0) const {
+  virtual bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                             Vec3f &N) const {
     return false;
   }
 
@@ -27,8 +27,8 @@ class Sphere : public Mesh {
  public:
   float radius;
 
-  bool ray_intersect(const Vec3f &orig, const Vec3f &dir,
-                     float &t0) const override {
+  bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                     Vec3f &N) const override {
     Vec3f L = (pos - orig);
     float tca = L * dir;
     float d2 = L * L - tca * tca;
@@ -40,10 +40,39 @@ class Sphere : public Mesh {
       t0 = t1;
     }
     if (t0 < 0) return false;
+
+    N = (dir * t0 - pos).normalize();
     return true;
   }
 
   Sphere(const Vec3f p, const float r) : Mesh(p), radius(r) {}
+};
+
+class Plane : public Mesh {
+ public:
+  float width;
+  float height;
+  Vec3f normal;
+
+  bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                     Vec3f &N) const override {
+    Vec3f L = (pos - orig);
+    float d = L * normal * (1 / (dir * normal));
+    Vec3f r = L - dir * d;
+    // DEV: Disc with r = width;
+
+    if (r * r < width * width) {
+      t0 = d;
+      if (t0 < 0) return false;
+      N = normal;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Plane(Vec3f p, float w, float h, Vec3f n)
+      : Mesh(p), width(w), height(h), normal(n) {}
 };
 
 class Object {
@@ -65,9 +94,8 @@ bool scene_intersect(const Vec3f &origin, const Vec3f &dir,
   float t0 = 0;
   for (size_t i = 0; i < objects.size(); i++) {
     Mesh *mesh = objects[i].target;
-    if (mesh->ray_intersect(origin, dir, t0)) {
+    if (mesh->ray_intersect(origin, dir, t0, N)) {
       hit = dir * t0 + origin;
-      N = (hit - mesh->pos).normalize();
       object = objects[i];
       return true;
     }
@@ -81,6 +109,8 @@ void render() {
 
   // cam
   float fov = 50 * M_PI / 180;
+
+  const float material_specular = 50;
 
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
@@ -96,11 +126,12 @@ void render() {
   Sphere s2 = {Vec3f(-.2, -.1, -2), 0.25};
   Sphere s3 = {Vec3f(.1, -.3, -1.7), 0.1};
 
+  Plane plane = {Vec3f(0, .8, -2), 2, .4, Vec3f(0, -1, .2).normalize()};
+
   objects.push_back({s1, Vec3f(.8, .2, .2)});
   objects.push_back({s2, Vec3f(.2, .8, .2)});
   objects.push_back({s3, Vec3f(.2, .2, .8)});
-
-  const float material_specular = 50;
+  objects.push_back({plane, Vec3f(1, 1, 1)});
 
   float min = 10000;
   float max = 0;
