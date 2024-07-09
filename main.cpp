@@ -50,18 +50,26 @@ class Sphere : public Mesh {
 
 class Plane : public Mesh {
  public:
-  float width;
-  float height;
-  Vec3f normal;
+  float half_width;
+  float half_height;
+  Vec3f rotation;  // currently, only X rot is allowed.
+  Vec3f face_normal = Vec3f(0, -1, 0);
 
   bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
                      Vec3f &N) const override {
+    Vec3f normal = Vec3f(0, -1 * cos(rotation.x), sin(rotation.x));
     Vec3f L = (pos - orig);
     float d = L * normal * (1 / (dir * normal));
-    Vec3f r = L - dir * d;
-    // DEV: Disc with r = width;
+    Vec3f r = dir * d - L;
 
-    if (r * r < width * width) {
+    // split component
+    Vec3f dir_w = Vec3f(1, 0, 0);
+    Vec3f dir_h = Vec3f(0, sin(rotation.x), cos(rotation.x));
+    float w = r * dir_w;
+    float h = r * dir_h;
+
+    if (-half_width < w && w < half_width && -half_height < h &&
+        h < half_height) {
       t0 = d;
       if (t0 < 0) return false;
       N = normal;
@@ -71,8 +79,8 @@ class Plane : public Mesh {
     }
   }
 
-  Plane(Vec3f p, float w, float h, Vec3f n)
-      : Mesh(p), width(w), height(h), normal(n) {}
+  Plane(Vec3f p, float w, float h, Vec3f rot)
+      : Mesh(p), half_width(w), half_height(h), rotation(rot) {}
 };
 
 class Object {
@@ -126,7 +134,7 @@ void render() {
   Sphere s2 = {Vec3f(-.2, -.1, -2), 0.25};
   Sphere s3 = {Vec3f(.1, -.3, -1.7), 0.1};
 
-  Plane plane = {Vec3f(0, .8, -2), 2, .4, Vec3f(0, -1, .2).normalize()};
+  Plane plane = {Vec3f(0, .3, -3), .8, .8, Vec3f(M_PI / 6, 0, 0)};
 
   objects.push_back({s1, Vec3f(.8, .2, .2)});
   objects.push_back({s2, Vec3f(.2, .8, .2)});
