@@ -88,6 +88,7 @@ class Object {
   Mesh *target;
   Vec3f color;
 
+  Object() = default;
   Object(Mesh &m, const Vec3f c) : target(&m), color(c) {}
 };
 
@@ -116,7 +117,7 @@ bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
               const std::vector<PointLight> &lights) {
   Vec3f hit = Vec3f(0, 0, 0);
   Vec3f n = Vec3f(0, 0, 0);
-  Object object = objects[0];  // TODO: make it null
+  Object object;
 
   if (!scene_intersect(Vec3f(0, 0, 0), dir, objects, hit, n, object)) {
     return false;
@@ -133,7 +134,7 @@ bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
     // shadow
     Vec3f temp_hit = Vec3f(0, 0, 0);
     Vec3f temp_n = Vec3f(0, 0, 0);
-    Object temp_object = objects[0];
+    Object temp_object;
     Vec3f shadow_origin = dir_light * n < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
     if (scene_intersect(shadow_origin, dir_light, objects, temp_hit, temp_n,
                         temp_object))
@@ -155,8 +156,6 @@ void render() {
   // cam
   float fov = 50 * M_PI / 180;
 
-  const float material_specular = 50;
-
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
 
@@ -171,7 +170,7 @@ void render() {
 
   Sphere s1 = {Vec3f(.2, .2, -2.3), 0.2};
   Sphere s2 = {Vec3f(-.2, -.1, -2), 0.25};
-  Sphere s3 = {Vec3f(.1, -.3, -1.7), 0.1};
+  Sphere s3 = {Vec3f(.4, -.3, -2.3), 0.3};
 
   Plane plane = {Vec3f(0, .3, -3), .8, .8, Vec3f(M_PI / 6, 0, 0)};
 
