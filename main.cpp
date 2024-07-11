@@ -111,6 +111,43 @@ bool scene_intersect(const Vec3f &origin, const Vec3f &dir,
   return false;
 }
 
+bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
+              const std::vector<Object> &objects,
+              const std::vector<PointLight> &lights) {
+  Vec3f hit = Vec3f(0, 0, 0);
+  Vec3f n = Vec3f(0, 0, 0);
+  Object object = objects[0];  // TODO: make it null
+
+  if (!scene_intersect(Vec3f(0, 0, 0), dir, objects, hit, n, object)) {
+    return false;
+  };
+
+  float diff_intensity = 0;
+  float spec_intensity = 0;
+  Vec3f r = (dir + n * ((dir * n) * -2));
+
+  for (size_t light_i = 0; light_i < lights.size(); light_i++) {
+    const PointLight light = lights[light_i];
+    Vec3f dir_light = (light.pos - hit).normalize();
+
+    // shadow
+    Vec3f temp_hit = Vec3f(0, 0, 0);
+    Vec3f temp_n = Vec3f(0, 0, 0);
+    Object temp_object = objects[0];
+    Vec3f shadow_origin = dir_light * n < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
+    if (scene_intersect(shadow_origin, dir_light, objects, temp_hit, temp_n,
+                        temp_object))
+      continue;
+
+    diff_intensity += std::max(0.f, n * dir_light) * light.intensity;
+
+    spec_intensity += powf(std::max(0.f, r * dir_light), 50) * light.intensity;
+  }
+
+  color = (object.color * (diff_intensity + spec_intensity));
+  return true;
+}
+
 void render() {
   const int width = 1024;
   const int height = 768;
@@ -122,6 +159,8 @@ void render() {
 
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
+
+  const Vec3f BACKGROUND_COLOR = Vec3f(.9, .9, .9);
 
   std::vector<PointLight> lights;
   lights.push_back({Vec3f(0, -1.2, -0.5), 0.8});
@@ -141,9 +180,6 @@ void render() {
   objects.push_back({s3, Vec3f(.2, .2, .8)});
   objects.push_back({plane, Vec3f(1, 1, 1)});
 
-  float min = 10000;
-  float max = 0;
-
   // Render Pass
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
@@ -151,45 +187,11 @@ void render() {
       float y = (2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.) * height /
                 (float)width;
       Vec3f dir = Vec3f(x, y, -1).normalize();
-      Vec3f hit = Vec3f(0, 0, 0);
-      Vec3f n = Vec3f(0, 0, 0);
-      Object object = objects[0];  // TODO: make it null
-      if (!scene_intersect(Vec3f(0, 0, 0), dir, objects, hit, n, object))
-        continue;
-
-      // Store depth
-      const float depth = hit.norm();
-      depthbuffer[i + j * width] = depth;
-      min = std::min(min, depth);
-      max = std::max(max, depth);
-
-      float diff_intensity = 0;
-      float spec_intensity = 0;
-
-      for (size_t light_i = 0; light_i < lights.size(); light_i++) {
-        const PointLight light = lights[light_i];
-        Vec3f dir_light = (light.pos - hit).normalize();
-
-        // shadow
-        Vec3f temp_hit = Vec3f(0, 0, 0);
-        Vec3f temp_n = Vec3f(0, 0, 0);
-        Object temp_object = objects[0];
-        Vec3f shadow_origin =
-            dir_light * n < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
-        if (scene_intersect(shadow_origin, dir_light, objects, temp_hit, temp_n,
-                            temp_object))
-          continue;
-
-        diff_intensity += std::max(0.f, n * dir_light) * light.intensity;
-
-        Vec3f r = (dir + n * ((dir * n) * -2));
-
-        spec_intensity +=
-            powf(std::max(0.f, r * dir_light), material_specular) *
-            light.intensity;
+      Vec3f color = Vec3f();
+      if (!cast_ray(Vec3f(0, 0, 0), dir, color, objects, lights)) {
+        color = BACKGROUND_COLOR;
       }
-      framebuffer[i + j * width] =
-          object.color * (diff_intensity + spec_intensity);
+      framebuffer[i + j * width] = color;
     }
   }
 
