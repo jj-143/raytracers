@@ -12,6 +12,9 @@
 #include "geometry.h"
 #include "utils.h"
 
+const Vec3f BACKGROUND_COLOR = Vec3f(0.2, 0.7, 0.8);
+const int MAX_REFLECTION_DEPTH = 4;
+
 class Mesh {
  public:
   Vec3f pos;
@@ -85,7 +88,7 @@ class Plane : public Mesh {
 
 struct Material {
   Vec3f diffuse_color;
-  Vec2f albedo = Vec2f(1, 0);
+  Vec3f albedo = Vec3f(1, 0, 0);
   float specular_exponent;
 };
 
@@ -120,18 +123,30 @@ bool scene_intersect(const Vec3f &origin, const Vec3f &dir,
 
 bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
               const std::vector<Object> &objects,
-              const std::vector<PointLight> &lights) {
+              const std::vector<PointLight> &lights, int depth = 0) {
   Vec3f hit = Vec3f(0, 0, 0);
   Vec3f n = Vec3f(0, 0, 0);
   Object object;
 
-  if (!scene_intersect(Vec3f(0, 0, 0), dir, objects, hit, n, object)) {
+  if (depth > MAX_REFLECTION_DEPTH ||
+      !scene_intersect(orig, dir, objects, hit, n, object)) {
     return false;
   };
 
   float diff_intensity = 0;
   float spec_intensity = 0;
   Vec3f r = (dir + n * ((dir * n) * -2));
+
+  // reflection
+  Vec3f reflection_color = Vec3f(0, 0, 0);
+
+  Vec3f reflection_dir = r.normalize();
+  Vec3f reflection_origin = hit + r * 1e-3;
+
+  if (!cast_ray(reflection_origin, reflection_dir, reflection_color, objects,
+                lights, depth + 1)) {
+    reflection_color = BACKGROUND_COLOR;
+  };
 
   for (size_t light_i = 0; light_i < lights.size(); light_i++) {
     const PointLight light = lights[light_i];
@@ -153,9 +168,10 @@ bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
         light.intensity;
   }
 
-  color = (object.material.diffuse_color * diff_intensity *
-               object.material.albedo[0] +
-           Vec3f(1, 1, 1) * spec_intensity * object.material.albedo[1]);
+  color = object.material.diffuse_color * diff_intensity *
+              object.material.albedo[0] +
+          Vec3f(1, 1, 1) * spec_intensity * object.material.albedo[1] +
+          reflection_color * object.material.albedo[2];
   return true;
 }
 
@@ -169,8 +185,6 @@ void render() {
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
 
-  const Vec3f BACKGROUND_COLOR = Vec3f(.9, .9, .9);
-
   std::vector<PointLight> lights;
   lights.push_back({Vec3f(0, -1.2, -0.5), 0.8});
   lights.push_back({Vec3f(.2, -1.6, -0.5), 0.3});
@@ -181,17 +195,19 @@ void render() {
   Sphere s1 = {Vec3f(.2, .2, -2.3), 0.2};
   Sphere s2 = {Vec3f(-.2, -.1, -2), 0.25};
   Sphere s3 = {Vec3f(.4, -.3, -2.3), 0.3};
+  Sphere s4 = {Vec3f(-.1, .2, -1.8), 0.2};
 
   Plane plane = {Vec3f(0, .3, -3), .8, .8, Vec3f(M_PI / 6, 0, 0)};
 
-  Material green = Material{Vec3f(.8, .2, .2), Vec2f(1, .3), 20};
-  Material red = Material{Vec3f(.2, .8, .2), Vec2f(1, .3), 50};
-  Material blue = Material{Vec3f(.2, .2, .8), Vec2f(1, .3), 20};
-  Material mat_plane = Material{Vec3f(1, 1, 1), Vec2f(1, .3), 10};
+  Material red = Material{Vec3f(.8, .2, .2), Vec3f(.6, .3, .1), 20};
+  Material green = Material{Vec3f(.2, .8, .2), Vec3f(.6, .3, .1), 50};
+  Material glass = Material{Vec3f(1, 1, 1), Vec3f(0, 10, .8), 1500};  // glass
+  Material mat_plane = Material{Vec3f(1, 1, 1), Vec3f(.6, .3, .1), 10};
 
+  objects.push_back({s4, glass});
   objects.push_back({s1, red});
   objects.push_back({s2, green});
-  objects.push_back({s3, blue});
+  objects.push_back({s3, glass});
   objects.push_back({plane, mat_plane});
 
   // Render Pass
