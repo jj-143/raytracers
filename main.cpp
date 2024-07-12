@@ -83,13 +83,19 @@ class Plane : public Mesh {
       : Mesh(p), half_width(w), half_height(h), rotation(rot) {}
 };
 
+struct Material {
+  Vec3f diffuse_color;
+  Vec2f albedo = Vec2f(1, 0);
+  float specular_exponent;
+};
+
 class Object {
  public:
   Mesh *target;
-  Vec3f color;
+  Material material;
 
   Object() = default;
-  Object(Mesh &m, const Vec3f c) : target(&m), color(c) {}
+  Object(Mesh &m, Material mat) : target(&m), material(mat) {}
 };
 
 struct PointLight {
@@ -142,10 +148,14 @@ bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
 
     diff_intensity += std::max(0.f, n * dir_light) * light.intensity;
 
-    spec_intensity += powf(std::max(0.f, r * dir_light), 50) * light.intensity;
+    spec_intensity +=
+        powf(std::max(0.f, r * dir_light), object.material.specular_exponent) *
+        light.intensity;
   }
 
-  color = (object.color * (diff_intensity + spec_intensity));
+  color = (object.material.diffuse_color * diff_intensity *
+               object.material.albedo[0] +
+           Vec3f(1, 1, 1) * spec_intensity * object.material.albedo[1]);
   return true;
 }
 
@@ -174,10 +184,15 @@ void render() {
 
   Plane plane = {Vec3f(0, .3, -3), .8, .8, Vec3f(M_PI / 6, 0, 0)};
 
-  objects.push_back({s1, Vec3f(.8, .2, .2)});
-  objects.push_back({s2, Vec3f(.2, .8, .2)});
-  objects.push_back({s3, Vec3f(.2, .2, .8)});
-  objects.push_back({plane, Vec3f(1, 1, 1)});
+  Material green = Material{Vec3f(.8, .2, .2), Vec2f(1, .3), 20};
+  Material red = Material{Vec3f(.2, .8, .2), Vec2f(1, .3), 50};
+  Material blue = Material{Vec3f(.2, .2, .8), Vec2f(1, .3), 20};
+  Material mat_plane = Material{Vec3f(1, 1, 1), Vec2f(1, .3), 10};
+
+  objects.push_back({s1, red});
+  objects.push_back({s2, green});
+  objects.push_back({s3, blue});
+  objects.push_back({plane, mat_plane});
 
   // Render Pass
   for (size_t j = 0; j < height; j++) {
