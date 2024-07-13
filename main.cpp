@@ -1,7 +1,8 @@
 /**
  * NOTE:
- * Framebuffer origin (0, 0) at top-left
- * Right (+X), Down (+Y), Facing Out from Screen (+Z)
+ * Framebuffer origin (0, 0) at top-left.
+ * Screen space origin (0, 0) at bottom-left:
+ *  - Right (+X), Up (+Y), Facing Out from Screen (+Z)
  */
 
 #include <cmath>
@@ -56,18 +57,18 @@ class Plane : public Mesh {
   float half_width;
   float half_height;
   Vec3f rotation;  // currently, only X rot is allowed.
-  Vec3f face_normal = Vec3f(0, -1, 0);
+  Vec3f face_normal = Vec3f(0, 1, 0);
 
   bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
                      Vec3f &N) const override {
-    Vec3f normal = Vec3f(0, -1 * cos(rotation.x), sin(rotation.x));
+    Vec3f normal = Vec3f(0, cos(rotation.x), sin(rotation.x));
     Vec3f L = (pos - orig);
     float d = L * normal * (1 / (dir * normal));
     Vec3f r = dir * d - L;
 
     // split component
     Vec3f dir_w = Vec3f(1, 0, 0);
-    Vec3f dir_h = Vec3f(0, sin(rotation.x), cos(rotation.x));
+    Vec3f dir_h = Vec3f(0, -sin(rotation.x), cos(rotation.x));
     float w = r * dir_w;
     float h = r * dir_h;
 
@@ -186,18 +187,18 @@ void render() {
   std::vector<float> depthbuffer(width * height);
 
   std::vector<PointLight> lights;
-  lights.push_back({Vec3f(0, -1.2, -0.5), 0.8});
-  lights.push_back({Vec3f(.2, -1.6, -0.5), 0.3});
-  lights.push_back({Vec3f(-.2, -1.4, -0.5), 0.3});
+  lights.push_back({Vec3f(0, 1.2, -0.5), 0.8});
+  lights.push_back({Vec3f(.2, 1.6, -0.5), 0.3});
+  lights.push_back({Vec3f(-.2, 1.4, -0.5), 0.3});
 
   std::vector<Object> objects;
 
-  Sphere s1 = {Vec3f(.2, .2, -2.3), 0.2};
-  Sphere s2 = {Vec3f(-.2, -.1, -2), 0.25};
-  Sphere s3 = {Vec3f(.4, -.3, -2.3), 0.3};
-  Sphere s4 = {Vec3f(-.1, .2, -1.8), 0.2};
+  Sphere s1 = {Vec3f(.2, -.2, -2.3), 0.2};
+  Sphere s2 = {Vec3f(-.2, .1, -2), 0.25};
+  Sphere s3 = {Vec3f(.4, .3, -2.3), 0.3};
+  Sphere s4 = {Vec3f(-.1, -.2, -1.8), 0.2};
 
-  Plane plane = {Vec3f(0, .3, -3), .8, .8, Vec3f(M_PI / 6, 0, 0)};
+  Plane plane = {Vec3f(0, -.3, -3), .8, .8, Vec3f(M_PI / 6, 0, 0)};
 
   Material red = Material{Vec3f(.8, .2, .2), Vec3f(.6, .3, .1), 20};
   Material green = Material{Vec3f(.2, .8, .2), Vec3f(.6, .3, .1), 50};
@@ -214,7 +215,7 @@ void render() {
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
       float x = (2 * (i + 0.5) / (float)width - 1) * tan(fov / 2.);
-      float y = (2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.) * height /
+      float y = -(2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.) * height /
                 (float)width;
       Vec3f dir = Vec3f(x, y, -1).normalize();
       Vec3f color = Vec3f();
