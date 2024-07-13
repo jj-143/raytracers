@@ -44,7 +44,7 @@ class Sphere : public Mesh {
     }
     if (t0 < 0) return false;
 
-    N = (dir * t0 - pos).normalize();
+    N = (dir * t0 + orig - pos).normalize();
     return true;
   }
 
