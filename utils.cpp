@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -5,8 +6,8 @@
 #include "geometry.h"
 
 /*
-* Save framebuffer to file "build/out.ppm"
-*/
+ * Save framebuffer to file "build/out.ppm"
+ */
 void save(std::vector<Vec3f> framebuffer, int width, int height) {
   std::ofstream ofs;  // save the framebuffer to file
   ofs.open("./out.ppm");
@@ -17,4 +18,11 @@ void save(std::vector<Vec3f> framebuffer, int width, int height) {
     }
   }
   ofs.close();
+}
+
+int64_t nowMillis() {
+  auto epoch = std::chrono::system_clock::now().time_since_epoch();
+  auto millis =
+      std::chrono::duration_cast<std::chrono::milliseconds>(epoch).count();
+  return millis;
 }

@@ -211,6 +211,7 @@ void render() {
   objects.push_back({s3, glass});
   objects.push_back({plane, mat_plane});
 
+  int64_t now = nowMillis();
   // Render Pass
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
@@ -225,6 +226,8 @@ void render() {
       framebuffer[i + j * width] = color;
     }
   }
+
+  std::cout << "Render took " << (nowMillis() - now) << "ms" << std::endl;
 
   save(framebuffer, width, height);
 }
