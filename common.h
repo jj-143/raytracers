@@ -74,8 +74,9 @@ class Plane : public Mesh {
 
 struct Material {
   Vec3f diffuse_color;
-  Vec3f albedo = Vec3f(1, 0, 0);
+  std::vector<float> albedo = {1, 0, 0, 0};
   float specular_exponent;
+  float refractive_index = 1;
 };
 
 class Object {
