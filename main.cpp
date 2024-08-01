@@ -14,9 +14,18 @@
 #include "geometry.h"
 #include "utils.h"
 
+/**
+ * Return a random float in [0, 1]
+ */
+inline float randf() {
+  return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+}
+
 const Vec3f BACKGROUND_COLOR = Vec3f(0.2, 0.7, 0.8);
 const int MAX_REFLECTION_DEPTH = 4;
 const int MAX_REFRACTION_DEPTH = 12;
+const int N_SAMPLES = 4;
+
 const float REFRACTIVE_INDEX_ENVIRONMENT = 1;  // air: 1, water: 1.33
 
 bool scene_intersect(const Vec3f &origin, const Vec3f &dir,
@@ -140,6 +149,7 @@ void render() {
 
   // cam
   float fov = 50 * M_PI / 180;
+  float pixel_size = tan(fov / 2) / width;
 
   std::vector<Vec3f> framebuffer(width * height);
   std::vector<float> depthbuffer(width * height);
@@ -176,14 +186,26 @@ void render() {
   // Render Pass
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
-      float x = (2 * (i + 0.5) / (float)width - 1) * tan(fov / 2.);
-      float y = -(2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.) * height /
-                (float)width;
-      Vec3f dir = Vec3f(x, y, -1).normalize();
       Vec3f color = Vec3f();
-      if (!cast_ray(Vec3f(0, 0, 0), dir, color, objects, lights)) {
-        color = BACKGROUND_COLOR;
+
+      for (size_t sample_i = 0; sample_i < N_SAMPLES; sample_i++) {
+        Vec3f sample_color = Vec3f();
+        float x = (2 * (i + 0.5) / (float)width - 1) * tan(fov / 2.);
+        float y = -(2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.) *
+                  height / (float)width;
+
+        // Random sample inside the pixel;
+        x += (randf() - .5) * pixel_size;
+        y += (randf() - .5) * pixel_size;
+
+        Vec3f dir = Vec3f(x, y, -1).normalize();
+
+        if (!cast_ray(Vec3f(0, 0, 0), dir, sample_color, objects, lights)) {
+          sample_color = BACKGROUND_COLOR;
+        }
+        color = color + sample_color;
       }
+      color = color * (1.f / N_SAMPLES);
       framebuffer[i + j * width] = color;
     }
   }
