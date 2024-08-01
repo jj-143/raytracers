@@ -97,29 +97,31 @@ void render() {
   std::vector<float> depthbuffer(width * height);
 
   std::vector<PointLight> lights;
-  lights.push_back({Vec3f(0, 1.2, -0.5), 0.8});
-  lights.push_back({Vec3f(.2, 1.6, -0.5), 0.3});
-  lights.push_back({Vec3f(-.2, 1.4, -0.5), 0.3});
+  lights.push_back({Vec3f(0, 1.2, -.5), 0.8});
+  lights.push_back({Vec3f(2.8, 1.4, -.4), 0.6});
 
   std::vector<Object> objects;
 
-  Sphere s1 = {Vec3f(.2, -.2, -2.3), 0.2};
-  Sphere s2 = {Vec3f(-.2, .1, -2), 0.25};
-  Sphere s3 = {Vec3f(.4, .3, -2.3), 0.3};
-  Sphere s4 = {Vec3f(-.1, -.2, -1.8), 0.2};
+  // clang-format off
+  Sphere s1       = {Vec3f(  .2,  -.2, -2.3),   0.2}; // red
+  Sphere s2       = {Vec3f( -.2,   .1,   -2),  0.25}; // green
+  Sphere s3       = {Vec3f(  .4,   .3, -2.3),   0.3}; // mirror
+  Sphere s4       = {Vec3f( -.1,  -.2, -1.4),   0.2}; // mirror
+  Sphere s5       = {Vec3f(  .1,  -.2, -1.8),   0.1}; // yellow
+  Plane plane     = {Vec3f(   0,  -.3,   -3),   .8,   .8, Vec3f(M_PI / 6, 0, 0)};
 
-  Plane plane = {Vec3f(0, -.3, -3), .8, .8, Vec3f(M_PI / 6, 0, 0)};
+  Material red        = Material{Vec3f(  1,  0,  0), Vec3f(  .6,  .3,  .1),  100};
+  Material green      = Material{Vec3f(  0,  1,  0), Vec3f(  .6,  .3,  .1),   20};
+  Material yellow     = Material{Vec3f(  1,  1,  0), Vec3f(  .6,  .3,  .1),  100};
+  Material mirror     = Material{Vec3f(  1,  1,  1), Vec3f(   0,  10,  .8), 1500};
+  Material mat_plane  = Material{Vec3f(  1,  1,  1), Vec3f(  .6,  .3,  .1),   10};
+  // clang-format on
 
-  Material red = Material{Vec3f(.8, .2, .2), Vec3f(.6, .3, .1), 20};
-  Material green = Material{Vec3f(.2, .8, .2), Vec3f(.6, .3, .1), 50};
-  Material glass = Material{Vec3f(1, 1, 1), Vec3f(0, 10, .8), 1500};  // glass
-  Material mat_plane = Material{Vec3f(1, 1, 1), Vec3f(.6, .3, .1), 10};
-
-  objects.push_back({s4, glass});
   objects.push_back({s1, red});
   objects.push_back({s2, green});
-  objects.push_back({s3, glass});
-  objects.push_back({plane, mat_plane});
+  objects.push_back({s3, mirror});
+  objects.push_back({s4, mirror});
+  objects.push_back({s5, yellow});
 
   int64_t now = nowMillis();
   // Render Pass
