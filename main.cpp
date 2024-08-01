@@ -20,16 +20,19 @@ const int MAX_REFLECTION_DEPTH = 4;
 bool scene_intersect(const Vec3f &origin, const Vec3f &dir,
                      const std::vector<Object> &objects, Vec3f &hit, Vec3f &N,
                      Object &object) {
-  float t0 = 0;
+  float t0 = MAXFLOAT;
   for (size_t i = 0; i < objects.size(); i++) {
     Mesh *mesh = objects[i].target;
-    if (mesh->ray_intersect(origin, dir, t0, N)) {
+    float temp_dist = 0;
+    Vec3f temp_N;
+    if (mesh->ray_intersect(origin, dir, temp_dist, temp_N) && temp_dist < t0) {
+      t0 = temp_dist;
+      N = temp_N;
       hit = dir * t0 + origin;
       object = objects[i];
-      return true;
     }
   }
-  return false;
+  return t0 < MAXFLOAT;
 }
 
 bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
