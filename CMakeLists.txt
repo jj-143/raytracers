@@ -4,6 +4,7 @@ project(main VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(OpenMP REQUIRED)
 
 file(GLOB src
   "./*.h"
@@ -14,3 +15,7 @@ add_executable(
   main
   ${src}
 )
+
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)
+endif()

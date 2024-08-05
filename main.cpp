@@ -180,7 +180,9 @@ void render(const int &width, const int &height) {
   objects.push_back({s5, yellow});
 
   int64_t now = nowMillis();
+
   // Render Pass
+#pragma omp parallel for collapse(2)
   for (size_t j = 0; j < height; j++) {
     for (size_t i = 0; i < width; i++) {
       Vec3f color = Vec3f();
