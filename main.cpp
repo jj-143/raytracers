@@ -143,10 +143,7 @@ bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
   return true;
 }
 
-void render() {
-  const int width = 1024;
-  const int height = 768;
-
+void render(const int &width, const int &height) {
   // cam
   float fov = 50 * M_PI / 180;
   float pixel_size = tan(fov / 2) / width;
@@ -215,7 +212,18 @@ void render() {
   save(framebuffer, width, height);
 }
 
-int main() {
-  render();
+int main(int argc, char *argv[]) {
+  const int width = argc > 1 ? atoi(argv[1]) : 1024;
+  const int height = argc > 2 ? atoi(argv[2]) : 768;
+
+  printf("Frame size: (%d, %d)\n", width, height);
+
+  if (!(width > 0 && height > 0)) {
+    fprintf(stderr, "Error: invalid argument: [width height]\n");
+    fprintf(stderr, "usage: main [width height]\n");
+    return 2;
+  }
+
+  render(width, height);
   return 0;
 }
