@@ -125,8 +125,12 @@ bool cast_ray(const Vec3f &orig, const Vec3f dir, Vec3f &color,
     Object temp_object;
     Vec3f shadow_origin = dir_light * n < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
     if (scene_intersect(shadow_origin, dir_light, objects, temp_hit, temp_n,
-                        temp_object))
-      continue;
+                        temp_object)) {
+      float dist = (temp_hit - shadow_origin).norm();
+      if (dist < (light.pos - hit).norm()) {
+        continue;
+      }
+    }
 
     diff_intensity += std::max(0.f, n * dir_light) * light.intensity;
 
