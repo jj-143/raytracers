@@ -53,6 +53,7 @@ template <typename T>
 struct vec<3, T> {
   vec() : x(T()), y(T()), z(T()) {}
   vec(T X, T Y, T Z) : x(X), y(Y), z(Z) {}
+  vec(T V) : x(V), y(V), z(V) {}
   T& operator[](const size_t i) {
     assert(i < 3);
     return i <= 0 ? x : (1 == i ? y : z);
