@@ -4,8 +4,8 @@
 class Mesh {
  public:
   Vec3f pos;
-  virtual bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                             Vec3f &N) const {
+  virtual bool rayIntersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                            Vec3f &N) const {
     return false;
   }
 
@@ -16,8 +16,8 @@ class Sphere : public Mesh {
  public:
   float radius;
 
-  bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                     Vec3f &N) const override {
+  bool rayIntersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                    Vec3f &N) const override {
     Vec3f L = (pos - orig);
     float tca = L * dir;
     float d2 = L * L - tca * tca;
@@ -39,22 +39,21 @@ class Sphere : public Mesh {
 
 class Plane : public Mesh {
  public:
-  float half_width;
-  float half_height;
+  float halfWidth;
+  float halfHeight;
   Vec3f normal = Vec3f(0, 1, 0);
 
-  bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                     Vec3f &N) const override {
+  bool rayIntersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                    Vec3f &N) const override {
     Vec3f L = (pos - orig);
     float d = L * normal * (1 / (dir * normal));
     Vec3f r = dir * d - L;
 
     // split components
-    float w = r * dir_w;
-    float h = r * dir_h;
+    float w = r * dirW;
+    float h = r * dirH;
 
-    if (-half_width < w && w < half_width && -half_height < h &&
-        h < half_height) {
+    if (-halfWidth < w && w < halfWidth && -halfHeight < h && h < halfHeight) {
       t0 = d;
       if (t0 < 0) return false;
       N = normal;
@@ -65,29 +64,29 @@ class Plane : public Mesh {
   }
 
   Plane(Vec3f p, float w, float h, Vec3f normal)
-      : Mesh(p), half_width(w), half_height(h), normal(normal) {
+      : Mesh(p), halfWidth(w), halfHeight(h), normal(normal) {
     this->normal = normal.normalize();
     Vec3f up = {0, 1, 0};
     Vec3f right = cross(up, this->normal);
 
-    // if normal is almost +Y/-Y: use {1, 0, 0} as dir_w
-    // else: use right as dir_w
+    // if normal is almost +Y/-Y: use {1, 0, 0} as dirW
+    // else: use right as dirW
     if (right.norm() != 0) {
-      dir_w = right.normalize();
+      dirW = right.normalize();
     }
-    dir_h = cross(this->normal, dir_w);
+    dirH = cross(this->normal, dirW);
   }
 
  private:
-  Vec3f dir_w = Vec3f(1, 0, 0);
-  Vec3f dir_h = Vec3f(0, 0, -1);
+  Vec3f dirW = Vec3f(1, 0, 0);
+  Vec3f dirH = Vec3f(0, 0, -1);
 };
 
 struct Material {
-  Vec3f diffuse_color;
+  Vec3f diffuseColor;
   std::vector<float> albedo = {1, 0, 0, 0};
-  float specular_exponent;
-  float refractive_index = 1;
+  float specularExponent;
+  float refractiveIndex = 1;
 };
 
 class Object {
