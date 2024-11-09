@@ -1,15 +1,20 @@
 #pragma once
+#include <memory>
+#include <string>
+
 #include "geometry.h"
 
 class Mesh {
  public:
+  std::string name;
   Vec3f pos;
+
   virtual bool rayIntersect(const Vec3f &orig, const Vec3f &dir, float &t0,
                             Vec3f &N) const {
     return false;
   }
 
-  Mesh(const Vec3f pos) : pos(pos) {}
+  Mesh(const Vec3f pos, const std::string name = "") : pos(pos), name(name) {}
 };
 
 class Sphere : public Mesh {
@@ -34,7 +39,8 @@ class Sphere : public Mesh {
     return true;
   }
 
-  Sphere(const Vec3f p, const float r) : Mesh(p), radius(r) {}
+  Sphere(const Vec3f p, const float r, const std::string name = "Sphere")
+      : Mesh(p, name), radius(r) {}
 };
 
 class Plane : public Mesh {
@@ -63,8 +69,9 @@ class Plane : public Mesh {
     }
   }
 
-  Plane(Vec3f p, float w, float h, Vec3f normal)
-      : Mesh(p), halfWidth(w), halfHeight(h), normal(normal) {
+  Plane(Vec3f p, float w, float h, Vec3f normal,
+        const std::string name = "Plane")
+      : Mesh(p, name), halfWidth(w), halfHeight(h), normal(normal) {
     this->normal = normal.normalize();
     Vec3f up = {0, 1, 0};
     Vec3f right = cross(up, this->normal);
@@ -91,11 +98,12 @@ struct Material {
 
 class Object {
  public:
-  Mesh *target;
-  Material material;
+  std::shared_ptr<Mesh> target;
+  std::shared_ptr<Material> material;
 
   Object() = default;
-  Object(Mesh &m, Material mat) : target(&m), material(mat) {}
+  Object(std::shared_ptr<Mesh> m, std::shared_ptr<Material> mat)
+      : target(m), material(mat) {}
 };
 
 struct PointLight {

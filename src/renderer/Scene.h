@@ -1,0 +1,34 @@
+#pragma once
+
+#include <memory>
+#include <vector>
+
+#include "../common.h"
+
+class Scene {
+ public:
+  std::vector<std::shared_ptr<Object>> objects;
+  std::vector<std::shared_ptr<PointLight>> lights;
+
+  void add(std::shared_ptr<Object> object) { this->objects.push_back(object); }
+
+  void add(std::shared_ptr<PointLight> light) { this->lights.push_back(light); }
+
+  inline bool intersect(const Vec3f &origin, const Vec3f &dir, Vec3f &hit,
+                        Vec3f &N, std::shared_ptr<Object> &object) const {
+    float t0 = MAXFLOAT;
+
+    for (auto &obj : objects) {
+      const Mesh &mesh = *obj->target;
+      float tempDist = 0;
+      Vec3f tempN;
+      if (mesh.rayIntersect(origin, dir, tempDist, tempN) && tempDist < t0) {
+        t0 = tempDist;
+        N = tempN;
+        hit = dir * t0 + origin;
+        object = obj;
+      }
+    }
+    return t0 < MAXFLOAT;
+  }
+};

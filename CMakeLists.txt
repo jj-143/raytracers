@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenMP REQUIRED)
 
-file(GLOB src
-  "./*.h"
-  "./*.cpp"
+file(GLOB_RECURSE src
+  "src/*.h"
+  "src/*.cpp"
 )
 
 add_executable(
