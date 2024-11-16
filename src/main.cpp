@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "common.h"
-#include "geometry.h"
+#include "core/Mesh.h"
 #include "math.h"
 #include "renderer/Renderer.h"
 #include "utils.h"

@@ -1,5 +1,5 @@
-#ifndef __GEOMETRY_H__
-#define __GEOMETRY_H__
+#pragma once
+
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -169,4 +169,3 @@ std::ostream& operator<<(std::ostream& out, const vec<DIM, T>& v) {
   }
   return out;
 }
-#endif  //__GEOMETRY_H__
