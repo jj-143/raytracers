@@ -15,7 +15,7 @@ const float REFRACTIVE_INDEX_ENVIRONMENT = 1;  // air: 1, water: 1.33
 
 bool refract(Vec3f d, Vec3f N, float nI, float nT, Vec3f &dir) {
   float n = nI / nT;
-  float cosI = -d * N;
+  float cosI = -dot(d, N);
   float sinI = sqrtf(1 - cosI * cosI);
   if (sinI > 1 / n) return false;  // total reflection
 
@@ -47,7 +47,7 @@ bool castRay(const Scene &scene, const Vec3f &orig, const Vec3f dir,
 
   float diffIntensity = 0;
   float specIntensity = 0;
-  Vec3f r = (dir + n * ((dir * n) * -2));
+  Vec3f r = (dir + n * (dot(dir, n) * -2));
 
   // reflection
   Vec3f reflectionColor = Vec3f(0, 0, 0);
@@ -63,7 +63,7 @@ bool castRay(const Scene &scene, const Vec3f &orig, const Vec3f dir,
   // Refraction
   Vec3f refractionColor = Vec3f(0, 0, 0);
   if (object->material->albedo[3] > 0) {
-    bool isInside = (dir * n) > 0;
+    bool isInside = dot(dir, n) > 0;
     float indexI = isInside ? object->material->refractiveIndex
                             : REFRACTIVE_INDEX_ENVIRONMENT;
     float indexT = isInside ? REFRACTIVE_INDEX_ENVIRONMENT
@@ -86,7 +86,7 @@ bool castRay(const Scene &scene, const Vec3f &orig, const Vec3f dir,
     Vec3f tempHit = Vec3f(0, 0, 0);
     Vec3f tempN = Vec3f(0, 0, 0);
     std::shared_ptr<SceneObject> tempObject;
-    Vec3f shadowOrigin = dirLight * n < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
+    Vec3f shadowOrigin = dot(dirLight, n) < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
     if (scene.intersect(shadowOrigin, dirLight, tempHit, tempN, tempObject)) {
       float dist = (tempHit - shadowOrigin).norm();
       if (dist < (light->pos - hit).norm()) {
@@ -94,11 +94,11 @@ bool castRay(const Scene &scene, const Vec3f &orig, const Vec3f dir,
       }
     }
 
-    diffIntensity += std::max(0.f, n * dirLight) * light->intensity;
+    diffIntensity += std::max(0.f, dot(n, dirLight)) * light->intensity;
 
-    specIntensity +=
-        powf(std::max(0.f, r * dirLight), object->material->specularExponent) *
-        light->intensity;
+    specIntensity += powf(std::max(0.f, dot(r, dirLight)),
+                          object->material->specularExponent) *
+                     light->intensity;
   }
 
   color = object->material->diffuseColor * diffIntensity *

@@ -24,8 +24,8 @@ class Sphere : public Mesh {
   inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
                         Vec3f &N) const override {
     Vec3f L = (pos - orig);
-    float tca = L * dir;
-    float d2 = L * L - tca * tca;
+    float tca = dot(L, dir);
+    float d2 = dot(L, L) - tca * tca;
     if (d2 > radius * radius) return false;
     float tcc = sqrtf(radius * radius - d2);  // bottom len of triangle
     t0 = tca - tcc;
@@ -52,12 +52,16 @@ class Plane : public Mesh {
   inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
                         Vec3f &N) const override {
     Vec3f L = (pos - orig);
-    float d = L * normal * (1 / (dir * normal));
+    float dirDotNormal = dot(dir, normal);
+    if (std::fabs(dirDotNormal) < 1e-8) {
+      return false;
+    }
+    float d = dot(L, normal) * (1 / dirDotNormal);
     Vec3f r = dir * d - L;
 
     // split components
-    float w = r * dirW;
-    float h = r * dirH;
+    float w = dot(r, dirW);
+    float h = dot(r, dirH);
 
     if (-halfWidth < w && w < halfWidth && -halfHeight < h && h < halfHeight) {
       t0 = d;

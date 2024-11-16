@@ -112,7 +112,14 @@ struct vec<4, T> {
 };
 
 template <size_t DIM, typename T>
-T operator*(const vec<DIM, T>& lhs, const vec<DIM, T>& rhs) {
+vec<DIM, T> operator*(const vec<DIM, T>& lhs, const vec<DIM, T>& rhs) {
+  vec<DIM, T> ret;
+  for (size_t i = DIM; i--; ret[i] = lhs[i] * rhs[i]);
+  return ret;
+}
+
+template <size_t DIM, typename T>
+T dot(const vec<DIM, T>& lhs, const vec<DIM, T>& rhs) {
   T ret = T();
   for (size_t i = DIM; i--; ret += lhs[i] * rhs[i]);
   return ret;
