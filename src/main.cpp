@@ -17,7 +17,7 @@
 #include "renderer/Renderer.h"
 #include "utils.h"
 
-std::shared_ptr<Scene> makeScene() {
+std::shared_ptr<Scene> makeCornellBoxScene() {
   std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
   scene->lights.push_back(
@@ -43,16 +43,16 @@ std::shared_ptr<Scene> makeScene() {
   auto glass     = std::make_shared<Material>(Material{Vec3f( .6, .7, .8), {  .1,  10,  .01,  .8}, 1500,  1.5});
   // clang-format on
 
-  scene->add(std::make_shared<Object>(sRed, red));
-  scene->add(std::make_shared<Object>(sGreen, green));
-  scene->add(std::make_shared<Object>(sYellow, yellow));
-  scene->add(std::make_shared<Object>(sMirror, mirror));
-  scene->add(std::make_shared<Object>(sGlass, glass));
-  scene->add(std::make_shared<Object>(floor, white));
-  scene->add(std::make_shared<Object>(ceiling, white));
-  scene->add(std::make_shared<Object>(wallLeft, red));
-  scene->add(std::make_shared<Object>(wallRight, green));
-  scene->add(std::make_shared<Object>(wallBack, white));
+  scene->add(std::make_shared<SceneObject>(sRed, red));
+  scene->add(std::make_shared<SceneObject>(sGreen, green));
+  scene->add(std::make_shared<SceneObject>(sYellow, yellow));
+  scene->add(std::make_shared<SceneObject>(sMirror, mirror));
+  scene->add(std::make_shared<SceneObject>(sGlass, glass));
+  scene->add(std::make_shared<SceneObject>(floor, white));
+  scene->add(std::make_shared<SceneObject>(ceiling, white));
+  scene->add(std::make_shared<SceneObject>(wallLeft, red));
+  scene->add(std::make_shared<SceneObject>(wallRight, green));
+  scene->add(std::make_shared<SceneObject>(wallBack, white));
 
   return scene;
 }
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     return 2;
   }
 
-  std::shared_ptr<Scene> scene = makeScene();
+  std::shared_ptr<Scene> scene = makeCornellBoxScene();
 
   Renderer renderer;
   renderer.config = {width, height, spp};

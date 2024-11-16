@@ -33,7 +33,7 @@ bool castRay(const Scene &scene, const Vec3f &orig, const Vec3f dir,
              Vec3f &color, int depthReflection = 0, int depthRefraction = 0) {
   Vec3f hit = Vec3f(0, 0, 0);
   Vec3f n = Vec3f(0, 0, 0);
-  std::shared_ptr<Object> object;
+  std::shared_ptr<SceneObject> object;
 
   // Also discard the ray if it exceeds maximum depth as if it doesn't hit
   // anything.
@@ -85,7 +85,7 @@ bool castRay(const Scene &scene, const Vec3f &orig, const Vec3f dir,
     // shadow
     Vec3f tempHit = Vec3f(0, 0, 0);
     Vec3f tempN = Vec3f(0, 0, 0);
-    std::shared_ptr<Object> tempObject;
+    std::shared_ptr<SceneObject> tempObject;
     Vec3f shadowOrigin = dirLight * n < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
     if (scene.intersect(shadowOrigin, dirLight, tempHit, tempN, tempObject)) {
       float dist = (tempHit - shadowOrigin).norm();

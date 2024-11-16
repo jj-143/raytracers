@@ -13,13 +13,13 @@ struct Material {
   float refractiveIndex = 1;
 };
 
-class Object {
+class SceneObject {
  public:
   std::shared_ptr<Mesh> target;
   std::shared_ptr<Material> material;
 
-  Object() = default;
-  Object(std::shared_ptr<Mesh> m, std::shared_ptr<Material> mat)
+  SceneObject() = default;
+  SceneObject(std::shared_ptr<Mesh> m, std::shared_ptr<Material> mat)
       : target(m), material(mat) {}
 };
 

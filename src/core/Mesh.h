@@ -9,8 +9,8 @@ class Mesh {
   std::string name;
   Vec3f pos;
 
-  virtual bool rayIntersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                            Vec3f &N) const {
+  virtual inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                                Vec3f &N) const {
     return false;
   }
 
@@ -21,8 +21,8 @@ class Sphere : public Mesh {
  public:
   float radius;
 
-  bool rayIntersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                    Vec3f &N) const override {
+  inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                        Vec3f &N) const override {
     Vec3f L = (pos - orig);
     float tca = L * dir;
     float d2 = L * L - tca * tca;
@@ -49,8 +49,8 @@ class Plane : public Mesh {
   float halfHeight;
   Vec3f normal = Vec3f(0, 1, 0);
 
-  bool rayIntersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                    Vec3f &N) const override {
+  inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
+                        Vec3f &N) const override {
     Vec3f L = (pos - orig);
     float d = L * normal * (1 / (dir * normal));
     Vec3f r = dir * d - L;
