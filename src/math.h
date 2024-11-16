@@ -176,3 +176,19 @@ std::ostream& operator<<(std::ostream& out, const vec<DIM, T>& v) {
   }
   return out;
 }
+
+inline bool refract(Vec3f d, Vec3f N, float nI, float nT, Vec3f& dir) {
+  float n = nI / nT;
+  float cosI = -dot(d, N);
+  float sinI = sqrtf(1 - cosI * cosI);
+  if (sinI > 1 / n) return false;  // total reflection
+
+  float sinT = n * sinI;
+  float cosT = sqrtf(1 - sinT * sinT);
+
+  Vec3f dH = (d + N * cosI).normalize();
+  Vec3f dN = -N;
+
+  dir = dH * sinT + dN * cosT;
+  return true;
+}

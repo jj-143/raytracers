@@ -13,22 +13,6 @@ const int MAX_REFRACTION_DEPTH = 12;
 
 const float REFRACTIVE_INDEX_ENVIRONMENT = 1;  // air: 1, water: 1.33
 
-bool refract(Vec3f d, Vec3f N, float nI, float nT, Vec3f &dir) {
-  float n = nI / nT;
-  float cosI = -dot(d, N);
-  float sinI = sqrtf(1 - cosI * cosI);
-  if (sinI > 1 / n) return false;  // total reflection
-
-  float sinT = n * sinI;
-  float cosT = sqrtf(1 - sinT * sinT);
-
-  Vec3f dH = (d + N * cosI).normalize();
-  Vec3f dN = -N;
-
-  dir = dH * sinT + dN * cosT;
-  return true;
-}
-
 bool castRay(const Scene &scene, const Vec3f &orig, const Vec3f dir,
              Vec3f &color, int depthReflection = 0, int depthRefraction = 0) {
   Vec3f hit = Vec3f(0, 0, 0);
