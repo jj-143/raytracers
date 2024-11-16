@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "geometry.h"
+#include "math.h"
 
 /*
  * Save framebuffer to file "build/out.ppm"

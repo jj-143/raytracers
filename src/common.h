@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 
-#include "geometry.h"
+#include "math.h"
 
 class Mesh {
  public:

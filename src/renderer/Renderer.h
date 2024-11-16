@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "../common.h"
-#include "../geometry.h"
+#include "../math.h"
 #include "../utils.h"
 #include "Scene.h"
 
