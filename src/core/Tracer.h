@@ -10,7 +10,10 @@ class Tracer {
   }
 };
 
-// Whitted style raytracer using Phong illumination model
+/**
+ * Whitted style recursive raytracer using Phong illumination model, based on
+ * `tinyraytracer`. Should be used with [PhongMaterial]
+ */
 class WhittedRaytracer : public Tracer {
  public:
   const Vec3f BACKGROUND_COLOR = Vec3f(0, 0, 0);
@@ -35,7 +38,7 @@ class WhittedRaytracer : public Tracer {
 
     // Also discard the ray if it exceeds maximum depth as if it doesn't hit
     // anything.
-    // Alternative option is to not casting the [reflection | refraction] ray
+    // Alternative option is to not casting the reflection or refraction ray
     // while returning back only the diffuse and specular.
     if (depthReflection > MAX_REFLECTION_DEPTH ||
         depthRefraction > MAX_REFRACTION_DEPTH ||
@@ -43,7 +46,8 @@ class WhittedRaytracer : public Tracer {
       return false;
     };
 
-    Material &material = *hitObject->material;
+    PhongMaterial &material =
+        *std::static_pointer_cast<PhongMaterial>(hitObject->material);
 
     Vec3f r = (dir + n * (dot(dir, n) * -2));
 

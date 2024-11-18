@@ -17,8 +17,10 @@ struct RenderConfig {
 class Renderer {
  public:
   RenderConfig config;
-  std::shared_ptr<Tracer> tracer = std::make_shared<WhittedRaytracer>();
+  std::shared_ptr<Tracer> tracer;
   std::vector<Vec3f> framebuffer;
+
+  Renderer(std::shared_ptr<Tracer> tracer) : tracer(tracer) {};
 
   inline void render(const Scene &scene) {
     this->framebuffer.resize(config.width * config.height);
