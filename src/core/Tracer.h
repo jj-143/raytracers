@@ -31,7 +31,7 @@ class WhittedRaytracer : public Tracer {
                         int depthRefraction = 0) {
     Vec3f hit = Vec3f(0, 0, 0);
     Vec3f n = Vec3f(0, 0, 0);
-    std::shared_ptr<SceneObject> object;
+    std::shared_ptr<SceneObject> hitObject;
 
     // Also discard the ray if it exceeds maximum depth as if it doesn't hit
     // anything.
@@ -39,15 +39,15 @@ class WhittedRaytracer : public Tracer {
     // while returning back only the diffuse and specular.
     if (depthReflection > MAX_REFLECTION_DEPTH ||
         depthRefraction > MAX_REFRACTION_DEPTH ||
-        !scene.intersect(orig, dir, hit, n, object)) {
+        !scene.intersect(orig, dir, hit, n, hitObject)) {
       return false;
     };
 
-    float diffIntensity = 0;
-    float specIntensity = 0;
+    Material &material = *hitObject->material;
+
     Vec3f r = (dir + n * (dot(dir, n) * -2));
 
-    // reflection
+    // Casting reflection ray
     Vec3f reflectionColor = Vec3f(0, 0, 0);
 
     Vec3f reflectionDir = r.normalize();
@@ -58,14 +58,14 @@ class WhittedRaytracer : public Tracer {
       reflectionColor = BACKGROUND_COLOR;
     };
 
-    // Refraction
+    // Casting transmission ray (refraction)
     Vec3f refractionColor = Vec3f(0, 0, 0);
-    if (object->material->albedo[3] > 0) {
+    if (material.constants[2] > 0) {
       bool isInside = dot(dir, n) > 0;
-      float indexI = isInside ? object->material->refractiveIndex
-                              : REFRACTIVE_INDEX_ENVIRONMENT;
-      float indexT = isInside ? REFRACTIVE_INDEX_ENVIRONMENT
-                              : object->material->refractiveIndex;
+      float indexI =
+          isInside ? material.refractiveIndex : REFRACTIVE_INDEX_ENVIRONMENT;
+      float indexT =
+          isInside ? REFRACTIVE_INDEX_ENVIRONMENT : material.refractiveIndex;
 
       Vec3f dirRefraction;
       if (refract(dir, isInside ? -n : n, indexI, indexT, dirRefraction)) {
@@ -77,10 +77,14 @@ class WhittedRaytracer : public Tracer {
       }
     }
 
+    // Calculate diffuse & specular contributions from each light.
+    Vec3f diffColor;
+    Vec3f specColor;
+
     for (auto &light : scene.lights) {
       Vec3f dirLight = (light->pos - hit).normalize();
 
-      // shadow
+      // Casting shadow ray
       Vec3f tempHit = Vec3f(0, 0, 0);
       Vec3f tempN = Vec3f(0, 0, 0);
       std::shared_ptr<SceneObject> tempObject;
@@ -93,18 +97,17 @@ class WhittedRaytracer : public Tracer {
         }
       }
 
-      diffIntensity += std::max(0.f, dot(n, dirLight)) * light->intensity;
+      diffColor =
+          diffColor + std::max(0.f, dot(n, dirLight)) * light->lightColor;
 
-      specIntensity += powf(std::max(0.f, dot(r, dirLight)),
-                            object->material->specularExponent) *
-                       light->intensity;
+      specColor = specColor + powf(std::max(0.f, dot(r, dirLight)),
+                                   material.specularExponent) *
+                                  light->lightColor;
     }
 
-    color = object->material->diffuseColor * diffIntensity *
-                object->material->albedo[0] +
-            Vec3f(1, 1, 1) * specIntensity * object->material->albedo[1] +
-            reflectionColor * object->material->albedo[2] +
-            refractionColor * object->material->albedo[3];
+    color = material.albedo * diffColor + material.constants[0] * specColor +
+            material.constants[1] * reflectionColor +
+            material.constants[2] * refractionColor;
     return true;
   }
 };

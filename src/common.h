@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 
@@ -7,10 +8,10 @@
 #include "math.h"
 
 struct Material {
-  Vec3f diffuseColor;
-  std::vector<float> albedo = {1, 0, 0, 0};
+  Vec3f albedo;
+  std::array<float, 3> constants;  // k_specular, k_reflection, k_transmission
   float specularExponent;
-  float refractiveIndex = 1;
+  float refractiveIndex;
 };
 
 class SceneObject {
@@ -25,5 +26,5 @@ class SceneObject {
 
 struct PointLight {
   Vec3f pos;
-  float intensity;
+  Vec3f lightColor = Vec3f(1);
 };
