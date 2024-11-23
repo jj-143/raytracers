@@ -1,10 +1,17 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "../common.h"
 #include "../core/Mesh.h"
+
+struct Intersection {
+  Vec3f hit;
+  Vec3f n;
+  std::shared_ptr<SceneObject> object;
+};
 
 class Scene {
  public:
@@ -17,9 +24,12 @@ class Scene {
 
   void add(std::shared_ptr<PointLight> light) { this->lights.push_back(light); }
 
-  inline bool intersect(const Vec3f &origin, const Vec3f &dir, Vec3f &hit,
-                        Vec3f &N, std::shared_ptr<SceneObject> &object) const {
+  inline std::optional<Intersection> intersect(const Vec3f &origin,
+                                               const Vec3f &dir) const {
     float t0 = MAXFLOAT;
+    Vec3f hit;
+    Vec3f N;
+    std::shared_ptr<SceneObject> object;
 
     for (auto &obj : objects) {
       const Mesh &mesh = *obj->target;
@@ -32,6 +42,9 @@ class Scene {
         object = obj;
       }
     }
-    return t0 < MAXFLOAT;
+    if (t0 < MAXFLOAT) {
+      return Intersection{.hit = hit, .n = N, .object = object};
+    }
+    return {};
   }
 };

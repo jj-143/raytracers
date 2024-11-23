@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "../common.h"
 #include "../renderer/Scene.h"
 
@@ -32,19 +34,21 @@ class WhittedRaytracer : public Tracer {
   inline bool traceBack(const Scene &scene, const Vec3f &orig, const Vec3f dir,
                         Vec3f &color, int depthReflection = 0,
                         int depthRefraction = 0) {
-    Vec3f hit = Vec3f(0, 0, 0);
-    Vec3f n = Vec3f(0, 0, 0);
-    std::shared_ptr<SceneObject> hitObject;
-
     // Also discard the ray if it exceeds maximum depth as if it doesn't hit
     // anything.
     // Alternative option is to not casting the reflection or refraction ray
     // while returning back only the diffuse and specular.
     if (depthReflection > MAX_REFLECTION_DEPTH ||
-        depthRefraction > MAX_REFRACTION_DEPTH ||
-        !scene.intersect(orig, dir, hit, n, hitObject)) {
+        depthRefraction > MAX_REFRACTION_DEPTH) {
       return false;
     };
+
+    std::optional<Intersection> intr = scene.intersect(orig, dir);
+    if (!intr) return false;
+
+    Vec3f &hit = intr->hit;
+    Vec3f &n = intr->n;
+    std::shared_ptr<SceneObject> &hitObject = intr->object;
 
     PhongMaterial &material =
         *std::static_pointer_cast<PhongMaterial>(hitObject->material);
@@ -89,14 +93,12 @@ class WhittedRaytracer : public Tracer {
       Vec3f dirLight = (light->pos - hit).normalize();
 
       // Casting shadow ray
-      Vec3f tempHit = Vec3f(0, 0, 0);
-      Vec3f tempN = Vec3f(0, 0, 0);
-      std::shared_ptr<SceneObject> tempObject;
       Vec3f shadowOrigin =
           dot(dirLight, n) < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
-      if (scene.intersect(shadowOrigin, dirLight, tempHit, tempN, tempObject)) {
-        float dist = (tempHit - shadowOrigin).norm();
-        if (dist < (light->pos - hit).norm()) {
+      if (auto intr = scene.intersect(shadowOrigin, dirLight)) {
+        float dHit = (intr->hit - shadowOrigin).norm();
+        float dLight = (light->pos - shadowOrigin).norm();
+        if (dLight - dHit > 1e-3) {
           continue;
         }
       }
