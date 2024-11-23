@@ -53,13 +53,10 @@ class WhittedRaytracer : public Tracer {
     PhongMaterial &material =
         *std::static_pointer_cast<PhongMaterial>(hitObject->material);
 
-    Vec3f r = (dir + n * (dot(dir, n) * -2));
-
     // Casting reflection ray
     Vec3f reflectionColor = Vec3f(0, 0, 0);
-
-    Vec3f reflectionDir = r.normalize();
-    Vec3f reflectionOrigin = hit + r * 1e-3;
+    Vec3f reflectionDir = (dir + n * (dot(dir, n) * -2)).normalize();
+    Vec3f reflectionOrigin = hit + reflectionDir * 1e-3;
 
     if (!traceBack(scene, reflectionOrigin, reflectionDir, reflectionColor,
                    depthReflection + 1, depthRefraction)) {
@@ -91,10 +88,10 @@ class WhittedRaytracer : public Tracer {
 
     for (auto &light : scene.lights) {
       Vec3f dirLight = (light->pos - hit).normalize();
+      float NoL = dot(n, dirLight);
 
       // Casting shadow ray
-      Vec3f shadowOrigin =
-          dot(dirLight, n) < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
+      Vec3f shadowOrigin = NoL < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
       if (auto intr = scene.intersect(shadowOrigin, dirLight)) {
         float dHit = (intr->hit - shadowOrigin).norm();
         float dLight = (light->pos - shadowOrigin).norm();
@@ -103,10 +100,9 @@ class WhittedRaytracer : public Tracer {
         }
       }
 
-      diffColor =
-          diffColor + std::max(0.f, dot(n, dirLight)) * light->lightColor;
+      diffColor = diffColor + std::max(0.f, NoL) * light->lightColor;
 
-      specColor = specColor + powf(std::max(0.f, dot(r, dirLight)),
+      specColor = specColor + powf(std::max(0.f, dot(reflectionDir, dirLight)),
                                    material.specularExponent) *
                                   light->lightColor;
     }
