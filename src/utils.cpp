@@ -12,12 +12,12 @@ float gammaTransform(float value, float gamma) {
   return 0;
 }
 
-/*
- * Save framebuffer to file "build/out.ppm"
- */
-void save(std::vector<Vec3f> framebuffer, int width, int height) {
+void save(std::vector<Vec3f> framebuffer, int width, int height,
+          std::string filename) {
   std::ofstream ofs;  // save the framebuffer to file
-  ofs.open("./out.ppm");
+  std::string filepath = filename + ".ppm";
+  ofs.open(filepath);
+
   ofs << "P6\n" << width << " " << height << "\n255\n";
   for (size_t i = 0; i < height * width; ++i) {
     for (size_t j = 0; j < 3; j++) {
