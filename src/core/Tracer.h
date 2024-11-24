@@ -88,24 +88,24 @@ class WhittedRaytracer : public Tracer {
     Vec3f specColor;
 
     for (auto &light : scene.lights) {
-      Vec3f dirLight = (light->pos - hit).normalize();
+      Vec3f dirLight = (light->target->pos - hit).normalize();
       float NoL = dot(n, dirLight);
 
       // Casting shadow ray
       Vec3f shadowOrigin = NoL < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
       if (auto intr = scene.intersect(shadowOrigin, dirLight)) {
         float dHit = (intr->hit - shadowOrigin).norm();
-        float dLight = (light->pos - shadowOrigin).norm();
+        float dLight = (light->target->pos - shadowOrigin).norm();
         if (dLight - dHit > 1e-3) {
           continue;
         }
       }
 
-      diffColor = diffColor + std::max(0.f, NoL) * light->lightColor;
+      diffColor = diffColor + std::max(0.f, NoL) * light->material->albedo;
 
       specColor = specColor + powf(std::max(0.f, dot(reflectionDir, dirLight)),
                                    material.specularExponent) *
-                                  light->lightColor;
+                                  light->material->albedo;
     }
 
     color = material.albedo * diffColor + material.constants[0] * specColor +

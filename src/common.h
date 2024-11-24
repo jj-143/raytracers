@@ -17,7 +17,15 @@ class SceneObject {
       : target(m), material(mat) {}
 };
 
-struct PointLight {
-  Vec3f pos;
-  Vec3f lightColor = Vec3f(1);
+class LightObject : public SceneObject {
+ public:
+  LightObject(std::shared_ptr<SamplableMesh> m, std::shared_ptr<Emission> mat)
+      : SceneObject(m, mat) {}
+};
+
+class PointLight : public LightObject {
+ public:
+  PointLight(Vec3f pos, Vec3f color = Vec3f(1), float strength = 1)
+      : LightObject(std::make_shared<SamplableMesh>(pos),
+                    std::make_shared<Emission>(color, strength)) {}
 };

@@ -16,13 +16,16 @@ struct Intersection {
 class Scene {
  public:
   std::vector<std::shared_ptr<SceneObject>> objects;
-  std::vector<std::shared_ptr<PointLight>> lights;
+  std::vector<std::shared_ptr<LightObject>> lights;
 
   void add(std::shared_ptr<SceneObject> object) {
     this->objects.push_back(object);
   }
 
-  void add(std::shared_ptr<PointLight> light) { this->lights.push_back(light); }
+  void add(std::shared_ptr<LightObject> light) {
+    this->objects.push_back(light);
+    this->lights.push_back(light);
+  }
 
   inline std::optional<Intersection> intersect(const Vec3f &origin,
                                                const Vec3f &dir) const {
