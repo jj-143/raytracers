@@ -21,7 +21,7 @@ std::shared_ptr<Scene> makeCornellBoxScene() {
   std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
   scene->lights.push_back(
-      std::make_shared<PointLight>(Vec3f(.275, .548, -.275), Vec3f(1.5)));
+      std::make_shared<PointLight>(Vec3f(.275, .548, -.275), Vec3f(1)));
 
   // clang-format off
   auto sRed      = std::make_shared<Sphere>(Vec3f(.425, .080, -.344), .08, "Sphere.red");
@@ -35,12 +35,12 @@ std::shared_ptr<Scene> makeCornellBoxScene() {
   auto wallRight = std::make_shared<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
   auto wallBack  = std::make_shared<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
 
-  auto red       = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( .6,  0,  0), {  .3,  .01,   0},  100,    1});
-  auto green     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(  0, .6,  0), {  .3,  .01,   0},   20,    1});
-  auto yellow    = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( .6, .6,  0), {  .3,  .01,   0},  100,    1});
-  auto white     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( .6, .6, .6), {  .0,  .01,   0},   10,    1});
-  auto mirror    = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(  0,  0,  0), {  10,   .8,   0}, 1500,    1});
-  auto glass     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(  0,  0,  0), {  10,  .01,  .8}, 1500,  1.5});
+  auto red       = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(.5,  0,  0), {.3, .01,  0},  800,   1});
+  auto green     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( 0, .5,  0), {.3, .01,  0},  800,   1});
+  auto yellow    = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(.5, .5,  0), {.3, .01,  0},  800,   1});
+  auto white     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(.5, .5, .5), {.3, .01,  0},  800,   1});
+  auto mirror    = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( 0,  0,  0), {10,  .8,  0}, 1500,   1});
+  auto glass     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( 0,  0,  0), {10, .01, .8}, 1500, 1.5});
   // clang-format on
 
   scene->add(std::make_shared<SceneObject>(sRed, red));
