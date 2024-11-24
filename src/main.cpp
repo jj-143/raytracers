@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "common.h"
+#include "core/Material.h"
 #include "core/Mesh.h"
 #include "math.h"
 #include "renderer/Renderer.h"

@@ -4,6 +4,7 @@
 
 #include "../common.h"
 #include "../renderer/Scene.h"
+#include "Material.h"
 
 class Tracer {
  public:
