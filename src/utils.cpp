@@ -5,6 +5,13 @@
 
 #include "math.h"
 
+float gammaTransform(float value, float gamma) {
+  if (value > 0) {
+    return std::powf(value, 1 / gamma);
+  }
+  return 0;
+}
+
 /*
  * Save framebuffer to file "build/out.ppm"
  */

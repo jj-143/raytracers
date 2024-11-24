@@ -61,5 +61,15 @@ class Renderer {
     }
 
     std::cout << "Render took " << (nowMillis() - now) << "ms" << std::endl;
+
+    // Gamma Encoding
+    for (size_t i = 0; i < config.height * config.width; ++i) {
+      for (size_t j = 0; j < 3; j++) {
+        if (framebuffer[i][j] != framebuffer[i][j]) {
+          framebuffer[i][j] = 0;  // NaN fix
+        }
+        framebuffer[i][j] = gammaTransform(framebuffer[i][j], 2.2);
+      }
+    }
   }
 };
