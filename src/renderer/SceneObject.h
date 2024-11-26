@@ -17,8 +17,10 @@ class SceneObject {
 
 class LightObject : public SceneObject {
  public:
+  std::shared_ptr<SamplableMesh> sampler;
+
   LightObject(std::shared_ptr<SamplableMesh> m, std::shared_ptr<Emission> mat)
-      : SceneObject(m, mat) {}
+      : SceneObject(m, mat), sampler(m) {}
 };
 
 class PointLight : public LightObject {

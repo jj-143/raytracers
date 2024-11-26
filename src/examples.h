@@ -78,16 +78,64 @@ inline std::shared_ptr<Scene> CornellBoxPhong() {
   return scene;
 }
 
+// Cornell Box Scene with BSDF Material + emissive plane as area light
+inline std::shared_ptr<Scene> CornellBoxBSDF() {
+  std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+
+  scene->camera = Camera{.pos = {.275, .275, .8}, .fov = 39.3076 * M_PI / 180};
+
+  // clang-format off
+  auto sRed      = std::make_shared<Sphere>(Vec3f(.425, .080, -.344), .080, "Sphere.red");
+  auto sGreen    = std::make_shared<Sphere>(Vec3f(.125, .080, -.344), .080, "Sphere.green");
+  auto sYellow   = std::make_shared<Sphere>(Vec3f(.195, .275, -.470), .080, "Sphere.yellow");
+  auto sMirror   = std::make_shared<Sphere>(Vec3f(.355, .275, -.470), .080, "Sphere.mirror");
+  auto sGlass    = std::make_shared<Sphere>(Vec3f(.275, .080, -.140), .080, "Sphere.glass");
+  auto floor     = std::make_shared<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0), "Plane.floor");
+  auto ceiling   = std::make_shared<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0), "Plane.ceiling");
+  auto wallLeft  = std::make_shared<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0), "Plane.wallLeft");
+  auto wallRight = std::make_shared<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
+  auto wallBack  = std::make_shared<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
+  auto areaLight = std::make_shared<Plane> (Vec3f(.275, .548, -.275), .065, .065, Vec3f(0,-1, 0), "Plane.AreaLight");
+
+  auto red       = std::make_shared<LambertBSDF>(Vec3f(.5,  0,  0));
+  auto green     = std::make_shared<LambertBSDF>(Vec3f( 0, .5,  0));
+  auto yellow    = std::make_shared<LambertBSDF>(Vec3f(.5, .5,  0));
+  auto white     = std::make_shared<LambertBSDF>(Vec3f(.5, .5, .5));
+  auto light     = std::make_shared<Emission>(Vec3f(25));
+
+  // clang-format on
+  scene->add(std::make_shared<SceneObject>(sRed, red));
+  scene->add(std::make_shared<SceneObject>(sGreen, green));
+  scene->add(std::make_shared<SceneObject>(sYellow, yellow));
+  scene->add(std::make_shared<SceneObject>(sMirror, white));
+  scene->add(std::make_shared<SceneObject>(sGlass, white));
+  scene->add(std::make_shared<SceneObject>(floor, white));
+  scene->add(std::make_shared<SceneObject>(ceiling, white));
+  scene->add(std::make_shared<SceneObject>(wallLeft, red));
+  scene->add(std::make_shared<SceneObject>(wallRight, green));
+  scene->add(std::make_shared<SceneObject>(wallBack, white));
+  scene->add(std::make_shared<LightObject>(areaLight, light));
+
+  return scene;
+}
+
 inline Project ProjectWhittedRaytracer() {
   return {.scene = CornellBoxPhong(),
           .tracer = std::make_shared<WhittedRaytracer>(),
           .name = "whitted_raytracer"};
 }
 
+inline Project ProjectRecursivePathtracer() {
+  return {.scene = CornellBoxBSDF(),
+          .tracer = std::make_shared<RecursivePathtracer>(),
+          .name = "recursive_pathtracer"};
+}
+
 inline std::optional<Project> makeExampleProject(CliArgs args) {
-  std::optional<Project> project = args.example == "whitted"
-                                       ? ProjectWhittedRaytracer()
-                                       : std::optional<Project>{};
+  std::optional<Project> project =
+      args.example == "whitted"     ? ProjectWhittedRaytracer()
+      : args.example == "recursive" ? ProjectRecursivePathtracer()
+                                    : std::optional<Project>{};
   if (!project) return {};
 
   project->config = {.width = args.width,

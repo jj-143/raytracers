@@ -3,6 +3,8 @@
 #include <optional>
 
 #include "../core/Material.h"
+#include "../onb.h"
+#include "../rng.h"
 #include "Scene.h"
 
 class Tracer {
@@ -108,5 +110,76 @@ class WhittedRaytracer : public Tracer {
             material.constants[1] * reflectionColor +
             material.constants[2] * refractionColor;
     return true;
+  }
+};
+
+/**
+ * A recursive pathtracer using Monte Carlo and mixed sampling method, based on
+ * `Ray Tracing in One Weekend` series `Ray Tracing: The Rest of Your Life`.
+ *
+ * Light ray `ri` is randomly chosen between BSDF sampling and light sampling
+ * with equal probability.
+ * For non-specular rays, PDF value is equally weighted average of their pdfs.
+ * For specular rays, only BSDF sampling is performed for efficiency, since
+ * pdf is always 0 for Dirac Delta distribution, effectively wasting 50% of the
+ * samples.
+ */
+class RecursivePathtracer : public Tracer {
+ public:
+  int maxDepth = 8;
+
+  Vec3f trace(const Scene &scene, Vec3f orig, Vec3f dir) override {
+    return traceBack(orig, dir, scene);
+  }
+
+  Vec3f traceBack(const Vec3f &orig, const Vec3f dir, const Scene &scene,
+                  int depth = 0) {
+    if (depth > maxDepth) return Vec3f(0);
+
+    std::optional<Intersection> intr = scene.intersect(orig, dir);
+    if (!intr) return Vec3f(0);
+
+    Vec3f &hit = intr->hit;
+    Material &bsdf = *intr->object->material;
+    ONB onb = ONB(intr->n);           // orthonormal basis with surface normal
+    Ray ro = onb.toLocalSpace(-dir);  // view ray "outgoing ray"
+    Ray ri;                           // light ray "incoming ray"
+    Vec3f wiW;                        // light ray, world space
+
+    if (bsdf.type == MaterialType::Emission) return ro.z > 0 ? bsdf.albedo : 0;
+
+    DistributionSample ds = bsdf.sampleDistribution(ro);
+
+    if (IsSpecular(ds.flag)) {
+      ri = ds.sample(ro);
+      std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
+      if (!bs) return Vec3f(0);
+      Vec3f wiW = onb.toWorldSpace(ri);
+      Vec3f Li = traceBack(hit + wiW * 1e-3, wiW, scene, depth + 1);
+      return bs->fValue * Li;
+    }
+
+    bool isLightSampling = randf() < .5;
+    const auto &light = scene.sampleLight();
+
+    if (isLightSampling && light) {
+      wiW = light->sampler->generate(hit);
+      ri = onb.toLocalSpace(wiW);
+    } else {
+      ri = ds.sample(ro);
+      wiW = onb.toWorldSpace(ri);
+    }
+
+    std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
+    if (!bs) return Vec3f(0);
+    float NoL = ri.z;
+    if (NoL < 0) return Vec3f(0);
+
+    float lightPdf = light ? light->sampler->pdf(wiW, hit) : 0;
+    float pdf = (lightPdf + bs->pdf) / 2;
+    if (pdf < 1e-6) return Vec3f(0);
+
+    Vec3f Li = traceBack(hit + wiW * 1e-3, wiW, scene, depth + 1);
+    return bs->fValue * NoL * Li / pdf;
   }
 };

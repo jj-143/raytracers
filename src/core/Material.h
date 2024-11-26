@@ -1,17 +1,30 @@
 #pragma once
 
 #include <array>
+#include <memory>
+#include <optional>
 
 #include "../math.h"
+#include "Distribution.h"
+#include "common.h"
 
-enum class MaterialType { Emission, Phong };
+enum class MaterialType { BSDF, Emission, Phong };
 
 class Material {
  public:
   MaterialType type;
   Vec3f albedo;
+  std::shared_ptr<Distribution> distrib;
 
   Material(MaterialType type, Vec3f albedo) : type(type), albedo(albedo) {}
+
+  virtual inline Vec3f f(const Ray& ro, const Ray& ri) { return 0; }
+
+  virtual DistributionSample sampleDistribution(const Ray& ro) { return {}; }
+
+  virtual std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) {
+    return {};
+  }
 };
 
 class Emission : public Material {
@@ -33,4 +46,23 @@ class PhongMaterial : public Material {
         constants(constants),
         specularExponent(specularExponent),
         refractiveIndex(refractiveIndex) {}
+};
+
+class LambertBSDF : public Material {
+ public:
+  LambertBSDF(Vec3f albedo) : Material(MaterialType::BSDF, albedo) {
+    distrib = std::make_shared<CosineDistribution>();
+  }
+
+  inline Vec3f f(const Ray& ro, const Ray& ri) override {
+    return albedo / M_PI;
+  }
+
+  DistributionSample sampleDistribution(const Ray& ro) override {
+    return DistributionSample(distrib, Ray::Diffuse);
+  }
+
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+    return BSDFSample(f(ro, ri), distrib->pdf(ro, ri));
+  }
 };

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "../math.h"
+#include "../rng.h"
 
 class Mesh {
  public:
@@ -58,7 +59,7 @@ class Sphere : public Mesh {
       : Mesh(p, name), radius(r) {}
 };
 
-class Plane : public Mesh {
+class Plane : public SamplableMesh {
  public:
   float halfWidth;
   float halfHeight;
@@ -88,9 +89,27 @@ class Plane : public Mesh {
     }
   }
 
+  inline float pdf(const Vec3f &direction, const Vec3f &origin) const override {
+    float d;
+    Vec3f N;
+
+    if (!intersect(origin, direction, d, N)) return 0;
+    float NoL = -dot(N, direction);
+    if (NoL < 1e-6) return 0;
+
+    float lightArea = halfWidth * halfHeight * 4;
+    return d * d / (NoL * lightArea);
+  }
+
+  Vec3f generate(const Vec3f &origin) const override {
+    Vec3f p = Vec3f(randf(pos.x - halfWidth, pos.x + halfWidth), pos.y,
+                    randf(pos.z - halfHeight, pos.z + halfHeight));
+    return (p - origin).normalize();
+  }
+
   Plane(Vec3f p, float w, float h, Vec3f normal,
         const std::string name = "Plane")
-      : Mesh(p, name), halfWidth(w), halfHeight(h), normal(normal) {
+      : SamplableMesh(p, name), halfWidth(w), halfHeight(h), normal(normal) {
     this->normal = normal.normalize();
     Vec3f up = {0, 1, 0};
     Vec3f right = cross(up, this->normal);

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../core/Mesh.h"
+#include "../rng.h"
 #include "SceneObject.h"
 
 struct Camera {
@@ -55,5 +56,11 @@ class Scene {
       return Intersection{.hit = hit, .n = N, .object = object};
     }
     return {};
+  }
+
+  std::shared_ptr<LightObject> sampleLight() const {
+    if (!lights.size()) return nullptr;
+    int idx = randInt() % lights.size();
+    return lights[idx];
   }
 };
