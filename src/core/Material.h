@@ -11,6 +11,11 @@ class Material {
   Material(Vec3f albedo) : albedo(albedo) {}
 };
 
+class Emission : public Material {
+ public:
+  Emission(Vec3f color, float strength = 1) : Material(color * strength) {}
+};
+
 class PhongMaterial : public Material {
  public:
   std::array<float, 3> constants;  // k_specular, k_reflection, k_transmission
