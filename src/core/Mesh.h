@@ -17,6 +17,21 @@ class Mesh {
   Mesh(const Vec3f pos, const std::string name = "") : pos(pos), name(name) {}
 };
 
+class Sampler {
+ public:
+  virtual inline float pdf(const Vec3f &direction, const Vec3f &origin) const {
+    return 0;
+  }
+
+  virtual inline Vec3f generate(const Vec3f &origin) const {
+    return Vec3f(1, 0, 0);
+  }
+};
+
+class SamplableMesh : public Mesh, public Sampler {
+  using Mesh::Mesh;
+};
+
 class Sphere : public Mesh {
  public:
   float radius;
