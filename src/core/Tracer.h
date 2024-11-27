@@ -2,7 +2,6 @@
 
 #include <optional>
 
-#include "../common.h"
 #include "../renderer/Scene.h"
 #include "Material.h"
 
@@ -49,10 +48,8 @@ class WhittedRaytracer : public Tracer {
 
     Vec3f &hit = intr->hit;
     Vec3f &n = intr->n;
-    std::shared_ptr<SceneObject> &hitObject = intr->object;
-
     PhongMaterial &material =
-        *std::static_pointer_cast<PhongMaterial>(hitObject->material);
+        *std::static_pointer_cast<PhongMaterial>(intr->object->material);
 
     // Casting reflection ray
     Vec3f reflectionColor = Vec3f(0, 0, 0);

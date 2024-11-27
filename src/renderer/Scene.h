@@ -4,8 +4,8 @@
 #include <optional>
 #include <vector>
 
-#include "../common.h"
 #include "../core/Mesh.h"
+#include "SceneObject.h"
 
 struct Intersection {
   Vec3f hit;

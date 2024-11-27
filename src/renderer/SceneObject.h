@@ -1,11 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <string>
 
-#include "core/Material.h"
-#include "core/Mesh.h"
-#include "math.h"
+#include "../core/Material.h"
+#include "../core/Mesh.h"
 
 class SceneObject {
  public:

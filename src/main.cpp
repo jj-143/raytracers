@@ -11,11 +11,12 @@
 #include <thread>
 #include <vector>
 
-#include "common.h"
 #include "core/Material.h"
 #include "core/Mesh.h"
 #include "math.h"
 #include "renderer/Renderer.h"
+#include "renderer/Scene.h"
+#include "renderer/SceneObject.h"
 #include "utils.h"
 
 std::shared_ptr<Scene> makeCornellBoxScene() {
