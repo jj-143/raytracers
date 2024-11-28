@@ -2,10 +2,10 @@
 
 #include <memory>
 
-#include "../core/Tracer.h"
 #include "../math.h"
 #include "../utils.h"
 #include "Scene.h"
+#include "Tracer.h"
 
 struct RenderConfig {
   int width;

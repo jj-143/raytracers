@@ -17,6 +17,7 @@
 #include "renderer/Renderer.h"
 #include "renderer/Scene.h"
 #include "renderer/SceneObject.h"
+#include "renderer/Tracer.h"
 #include "utils.h"
 
 std::shared_ptr<Scene> makeCornellBoxScene() {

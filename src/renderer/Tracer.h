@@ -2,8 +2,8 @@
 
 #include <optional>
 
-#include "../renderer/Scene.h"
-#include "Material.h"
+#include "../core/Material.h"
+#include "Scene.h"
 
 class Tracer {
  public:
