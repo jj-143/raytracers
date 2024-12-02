@@ -5,9 +5,7 @@
 #include <iostream>
 #include <vector>
 
-inline float randf() {
-  return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-}
+inline float randf() { return rand() / (RAND_MAX + 1.f); }
 
 // Random
 template <typename T>
