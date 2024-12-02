@@ -65,13 +65,12 @@ class WhittedRaytracer : public Tracer {
     Vec3f refractionColor = Vec3f(0, 0, 0);
     if (material.constants[2] > 0) {
       bool isInside = dot(dir, n) > 0;
-      float indexI =
-          isInside ? material.refractiveIndex : REFRACTIVE_INDEX_ENVIRONMENT;
-      float indexT =
-          isInside ? REFRACTIVE_INDEX_ENVIRONMENT : material.refractiveIndex;
-
+      float eta = isInside
+                      ? material.refractiveIndex / REFRACTIVE_INDEX_ENVIRONMENT
+                      : REFRACTIVE_INDEX_ENVIRONMENT / material.refractiveIndex;
       Vec3f dirRefraction;
-      if (refract(dir, isInside ? -n : n, indexI, indexT, dirRefraction)) {
+
+      if (refract(dir, isInside ? -n : n, eta, dirRefraction)) {
         dirRefraction = dirRefraction.normalize();
         if (!traceBack(scene, hit + dirRefraction * 1e-3, dirRefraction,
                        refractionColor, depthReflection, depthRefraction + 1)) {
