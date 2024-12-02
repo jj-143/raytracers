@@ -4,16 +4,20 @@
 
 #include "../math.h"
 
+enum class MaterialType { Emission, Phong };
+
 class Material {
  public:
+  MaterialType type;
   Vec3f albedo;
 
-  Material(Vec3f albedo) : albedo(albedo) {}
+  Material(MaterialType type, Vec3f albedo) : type(type), albedo(albedo) {}
 };
 
 class Emission : public Material {
  public:
-  Emission(Vec3f color, float strength = 1) : Material(color * strength) {}
+  Emission(Vec3f color, float strength = 1)
+      : Material(MaterialType::Emission, color * strength) {}
 };
 
 class PhongMaterial : public Material {
@@ -25,7 +29,7 @@ class PhongMaterial : public Material {
   PhongMaterial(Vec3f albedo = Vec3f(1, 0, 0),
                 std::array<float, 3> constants = {0, 0, 0},
                 float specularExponent = 1, float refractiveIndex = 1)
-      : Material(albedo),
+      : Material(MaterialType::Phong, albedo),
         constants(constants),
         specularExponent(specularExponent),
         refractiveIndex(refractiveIndex) {}
