@@ -214,3 +214,9 @@ inline bool refract(const Vec3f& d, const Vec3f& N, float eta, Vec3f& dir) {
   dir = dH * sinT + dN * cosT;
   return true;
 }
+
+// Set wi as the mirror reflection of wo in ONB space
+inline void reflect(const Vec3f& wo, Vec3f& wi) {
+  wi = -wo;
+  wi.z = wo.z;
+}

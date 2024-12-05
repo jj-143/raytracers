@@ -66,3 +66,23 @@ class LambertBSDF : public Material {
     return BSDFSample(f(ro, ri), distrib->pdf(ro, ri));
   }
 };
+
+class MetalBSDF : public Material {
+ public:
+  MetalBSDF(Vec3f albedo) : Material(MaterialType::BSDF, albedo) {}
+
+  inline Vec3f f(const Ray& ro, const Ray& ri) override {
+    return IsSpecular(ri.flag) ? albedo : 0;
+  }
+
+  DistributionSample sampleDistribution(const Ray& ro) override {
+    Vec3f reflected;
+    reflect(ro, reflected);
+    return DistributionSample(
+        std::make_shared<DiracDeltaDistribution>(reflected), Ray::Specular);
+  }
+
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+    return BSDFSample(f(ro, ri), 0);
+  }
+};

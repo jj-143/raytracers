@@ -48,3 +48,13 @@ class CosineDistribution : public Distribution {
     return std::fmax(0.f, wi.z / M_PI);
   }
 };
+
+class DiracDeltaDistribution : public Distribution {
+ public:
+  DiracDeltaDistribution(Vec3f w) : w(w) {}
+  Vec3f sample(const Vec3f& wo) const override { return w; }
+  float pdf(const Vec3f& wo, const Vec3f& wi) const override { return 0; }
+
+ private:
+  Vec3f w;
+};
