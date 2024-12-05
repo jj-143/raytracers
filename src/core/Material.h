@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "../math.h"
+#include "../rng.h"
 #include "Distribution.h"
 #include "common.h"
 
@@ -80,6 +81,46 @@ class MetalBSDF : public Material {
     reflect(ro, reflected);
     return DistributionSample(
         std::make_shared<DiracDeltaDistribution>(reflected), Ray::Specular);
+  }
+
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+    return BSDFSample(f(ro, ri), 0);
+  }
+};
+
+class DielectricBSDF : public Material {
+ public:
+  float ior;  // Like in Blender, it's a relative value to surroundings.
+  float R0;   // Reflectance at wi = 0
+
+  DielectricBSDF(float ior) : Material(MaterialType::BSDF, Vec3f(1)), ior(ior) {
+    R0 = std::powf((ior - 1) / (ior + 1), 2);
+  }
+
+  inline Vec3f f(const Ray& ro, const Ray& ri) override {
+    return IsSpecular(ri.flag) ? 1 : 0;
+  }
+
+  DistributionSample sampleDistribution(const Ray& ro) override {
+    Ray ri;
+    float VoH = ro.z;
+    bool isInside = VoH < 0;
+    float eta = isInside ? ior : 1.f / ior;
+    float R = FresnelSchlick(std::abs(VoH), R0);
+    Vec3f N = isInside ? Vec3f(0, 0, -1) : Vec3f(0, 0, 1);
+
+    bool isAllowedAngle = refract(-ro, N, eta, ri);
+    bool isTransmission = isAllowedAngle && randf() < (1 - R);
+
+    if (isTransmission) {
+      ri.normalize();
+    } else {
+      reflect(ro, ri);
+    }
+
+    return DistributionSample(
+        std::make_shared<DiracDeltaDistribution>(ri),
+        isTransmission ? Ray::SpecularTransmission : Ray::SpecularReflection);
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {

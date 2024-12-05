@@ -220,3 +220,7 @@ inline void reflect(const Vec3f& wo, Vec3f& wi) {
   wi = -wo;
   wi.z = wo.z;
 }
+
+inline float FresnelSchlick(float VoH, float F0) {
+  return F0 + std::powf(1 - VoH, 5) * (1 - F0);
+}

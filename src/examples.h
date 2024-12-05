@@ -102,6 +102,7 @@ inline std::shared_ptr<Scene> CornellBoxBSDF() {
   auto yellow    = std::make_shared<LambertBSDF>(Vec3f(.5, .5,  0));
   auto white     = std::make_shared<LambertBSDF>(Vec3f(.5, .5, .5));
   auto mirror    = std::make_shared<MetalBSDF>(Vec3f(1, 1, 1));
+  auto glass     = std::make_shared<DielectricBSDF>(1.5);
   auto light     = std::make_shared<Emission>(Vec3f(25));
 
   // clang-format on
@@ -109,7 +110,7 @@ inline std::shared_ptr<Scene> CornellBoxBSDF() {
   scene->add(std::make_shared<SceneObject>(sGreen, green));
   scene->add(std::make_shared<SceneObject>(sYellow, yellow));
   scene->add(std::make_shared<SceneObject>(sMirror, mirror));
-  scene->add(std::make_shared<SceneObject>(sGlass, white));
+  scene->add(std::make_shared<SceneObject>(sGlass, glass));
   scene->add(std::make_shared<SceneObject>(floor, white));
   scene->add(std::make_shared<SceneObject>(ceiling, white));
   scene->add(std::make_shared<SceneObject>(wallLeft, red));
