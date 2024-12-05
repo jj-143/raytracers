@@ -133,10 +133,17 @@ inline Project ProjectRecursivePathtracer() {
           .name = "recursive_pathtracer"};
 }
 
+inline Project ProjectSimplePathtracer() {
+  return {.scene = CornellBoxBSDF(),
+          .tracer = std::make_shared<SimplePathtracer>(),
+          .name = "simple_pathtracer"};
+}
+
 inline std::optional<Project> makeExampleProject(CliArgs args) {
   std::optional<Project> project =
       args.example == "whitted"     ? ProjectWhittedRaytracer()
       : args.example == "recursive" ? ProjectRecursivePathtracer()
+      : args.example == "simple"    ? ProjectSimplePathtracer()
                                     : std::optional<Project>{};
   if (!project) return {};
 

@@ -183,3 +183,98 @@ class RecursivePathtracer : public Tracer {
     return bs->fValue * NoL * Li / pdf;
   }
 };
+
+/**
+ * An iterative pathtracer using Monte Carlo & Direct Light Sampling,
+ * based on `SimplePathtracer` from `PBRT`.
+ */
+class SimplePathtracer : public Tracer {
+ public:
+  int maxDepth = 8;
+
+  Vec3f trace(const Scene &scene, Vec3f orig, Vec3f dir) override {
+    int depth = 0;                 // trace depth
+    bool isSpecularBounce = true;  // initially true for direct Emission hit
+    Ray ro;                        // view ray "outgoing ray"
+    Ray ri;                        // light ray "incoming ray"
+    Vec3f woW(-dir);               // view vector, world space
+    Vec3f Lo(0);                   // radiance output
+    Vec3f beta(1);                 // path throughput weight, "contribution"
+
+    while (beta.x > 0 || beta.y > 0 || beta.z > 0) {
+      if (depth++ == maxDepth) break;
+
+      std::optional<Intersection> intr = scene.intersect(orig, -woW);
+      if (!intr) break;
+
+      Vec3f &hit = intr->hit;
+      Material &bsdf = *intr->object->material;
+      ONB onb = ONB(intr->n);
+      ro = onb.toLocalSpace(woW);
+
+      if (bsdf.type == MaterialType::Emission) {
+        if (isSpecularBounce && ro.z > 0) {
+          Lo += beta * bsdf.albedo;
+        }
+        // Skip this hit
+        orig = hit - woW * 1e-3;
+        continue;
+      }
+
+      // Direct light sampling
+      if (std::optional<LightSample> ls = sampleDirectLight(scene, hit)) {
+        Vec3f wl = onb.toLocalSpace(ls->dir);
+        if (wl.z > 0) {
+          Lo += beta * ls->light->material->albedo * bsdf.f(ro, wl) *
+                std::abs(wl.z) / ls->pdf;
+        }
+      }
+
+      // BSDF
+      DistributionSample ds = bsdf.sampleDistribution(ro);
+      isSpecularBounce = IsSpecular(ds.flag);
+      ri = ds.sample(ro);
+
+      std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
+      if (!bs) break;
+      float NoL = ri.z;
+
+      if (isSpecularBounce) {
+        beta *= bs->fValue;
+      } else {
+        if (NoL < 0 || bs->pdf < 1e-6) break;
+        beta *= bs->fValue * NoL / bs->pdf;
+      }
+
+      woW = -onb.toWorldSpace(ri);
+      orig = hit - woW * 1e-3;
+    }
+
+    return Lo;
+  }
+
+ private:
+  struct LightSample {
+    float pdf;
+    Vec3f dir;
+    std::shared_ptr<LightObject> light;
+  };
+
+  std::optional<LightSample> sampleDirectLight(const Scene &scene,
+                                               const Vec3f &pos) const {
+    const auto &light = scene.sampleLight();
+    if (!light) return {};
+
+    auto &sampler = *light->sampler;
+    Vec3f wlW = sampler.generate(pos);
+
+    std::optional<Intersection> intr = scene.intersect(pos + wlW * 1e-3, wlW);
+    bool occuluded = !intr || intr->object != light;
+    if (occuluded) return {};
+
+    float lightPdf = sampler.pdf(wlW, pos);
+    if (lightPdf < 1e-6) return {};
+
+    return LightSample{.pdf = lightPdf, .dir = wlW, .light = light};
+  }
+};
