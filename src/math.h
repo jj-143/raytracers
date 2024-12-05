@@ -224,3 +224,5 @@ inline void reflect(const Vec3f& wo, Vec3f& wi) {
 inline float FresnelSchlick(float VoH, float F0) {
   return F0 + std::powf(1 - VoH, 5) * (1 - F0);
 }
+
+inline bool sameHemisphere(Vec3f w1, Vec3f w2) { return w1.z * w2.z > 0; }

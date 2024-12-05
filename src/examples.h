@@ -97,10 +97,10 @@ inline std::shared_ptr<Scene> CornellBoxBSDF() {
   auto wallBack  = std::make_shared<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
   auto areaLight = std::make_shared<Plane> (Vec3f(.275, .548, -.275), .065, .065, Vec3f(0,-1, 0), "Plane.AreaLight");
 
-  auto red       = std::make_shared<LambertBSDF>(Vec3f(.5,  0,  0));
-  auto green     = std::make_shared<LambertBSDF>(Vec3f( 0, .5,  0));
-  auto yellow    = std::make_shared<LambertBSDF>(Vec3f(.5, .5,  0));
-  auto white     = std::make_shared<LambertBSDF>(Vec3f(.5, .5, .5));
+  auto red       = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f(.5,  0,  0), .2, 1.5);
+  auto green     = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f( 0, .5,  0), .2, 1.5);
+  auto yellow    = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f(.5, .5,  0), .2, 1.5);
+  auto white     = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f(.5, .5, .5), .2, 1.5);
   auto mirror    = std::make_shared<MetalBSDF>(Vec3f(1, 1, 1));
   auto glass     = std::make_shared<DielectricBSDF>(1.5);
   auto light     = std::make_shared<Emission>(Vec3f(25));
