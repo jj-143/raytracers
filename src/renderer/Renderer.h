@@ -34,12 +34,11 @@ class Renderer {
     float fov = 39.3076 * M_PI / 180;
     float pixelSize = tan(fov / 2) / config.width;
 
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for schedule(static, 1)
     for (size_t j = 0; j < config.height; j++) {
       for (size_t i = 0; i < config.width; i++) {
         Vec3f color = Vec3f();
 
-#pragma omp parallel for
         for (size_t iSample = 0; iSample < config.spp; iSample++) {
           float x = (2 * (i + 0.5) / (float)config.width - 1) * tan(fov / 2.);
           float y = -(2 * (j + 0.5) / (float)config.height - 1) *
