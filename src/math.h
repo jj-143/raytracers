@@ -3,27 +3,6 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
-#include <vector>
-
-// Random
-inline float randf() { return rand() / (RAND_MAX + 1.f); }
-
-inline float randf(float low, float high) {
-  float v = rand() / (RAND_MAX + 1.0);
-  return low + v * (high - low);
-}
-
-static unsigned int gSeed;
-
-// Used to seed the generator.
-inline void sFastRand(int seed) { gSeed = seed; }
-
-// Compute a pseudorandom integer.
-// Output value in range [0, 32767]
-inline int fastRand() {
-  gSeed = (214013 * gSeed + 2531011);
-  return (gSeed >> 16) & 0x7FFF;
-}
 
 template <typename T>
 inline T _rand() {

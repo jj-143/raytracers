@@ -64,6 +64,7 @@ int main(int argc, char *argv[]) {
   int width = argc > 1 ? atoi(argv[1]) : 512;
   int height = argc > 2 ? atoi(argv[2]) : 512;
   int spp = argc > 3 ? atoi(argv[3]) : 4;
+  int seed = argc > 4 ? atoi(argv[4]) : 0;
 
   printf("Frame size: (%d, %d)\n", width, height);
 
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<Tracer> tracer = std::make_shared<WhittedRaytracer>();
 
   Renderer renderer(tracer);
-  renderer.config = {width, height, spp};
+  renderer.config = {width, height, spp, seed};
   renderer.render(*scene);
   save(renderer.framebuffer, width, height);
   return 0;

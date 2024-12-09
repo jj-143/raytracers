@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "../math.h"
+#include "../rng.h"
 #include "../utils.h"
 #include "Scene.h"
 #include "Tracer.h"
@@ -11,6 +12,7 @@ struct RenderConfig {
   int width;
   int height;
   int spp;
+  int seed;
 };
 
 class Renderer {
@@ -23,6 +25,8 @@ class Renderer {
 
   inline void render(const Scene &scene) {
     this->framebuffer.resize(config.width * config.height);
+
+    initRNG(config.seed);
 
     // Render Pass
     int64_t now = nowMillis();
