@@ -7,6 +7,11 @@
 #include "../core/Mesh.h"
 #include "SceneObject.h"
 
+struct Camera {
+  Vec3f pos;
+  float fov = 50 * M_PI / 180.;
+};
+
 struct Intersection {
   Vec3f hit;
   Vec3f n;
@@ -17,6 +22,7 @@ class Scene {
  public:
   std::vector<std::shared_ptr<SceneObject>> objects;
   std::vector<std::shared_ptr<LightObject>> lights;
+  Camera camera;
 
   void add(std::shared_ptr<SceneObject> object) {
     this->objects.push_back(object);

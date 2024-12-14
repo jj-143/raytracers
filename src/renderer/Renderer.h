@@ -24,6 +24,9 @@ class Renderer {
   Renderer(std::shared_ptr<Tracer> tracer) : tracer(tracer) {};
 
   inline void render(const Scene &scene) {
+    float halfFov = scene.camera.fov / 2.;
+    float pixelSize = tan(halfFov) / config.width;
+
     this->framebuffer.resize(config.width * config.height);
 
     initRNG(config.seed);
@@ -31,22 +34,15 @@ class Renderer {
     // Render Pass
     int64_t now = nowMillis();
 
-    // Camera stuff
-    Vec3f camOrig = {.275, .275, .8};
-
-    // 35mm lens with 25mm sensor
-    float fov = 39.3076 * M_PI / 180;
-    float pixelSize = tan(fov / 2) / config.width;
-
 #pragma omp parallel for schedule(static, 1)
     for (size_t j = 0; j < config.height; j++) {
       for (size_t i = 0; i < config.width; i++) {
         Vec3f color = Vec3f();
 
         for (size_t iSample = 0; iSample < config.spp; iSample++) {
-          float x = (2 * (i + 0.5) / (float)config.width - 1) * tan(fov / 2.);
-          float y = -(2 * (j + 0.5) / (float)config.height - 1) *
-                    tan(fov / 2.) * config.height / (float)config.width;
+          float x = (2 * (i + 0.5) / (float)config.width - 1) * tan(halfFov);
+          float y = -(2 * (j + 0.5) / (float)config.height - 1) * tan(halfFov) *
+                    config.height / (float)config.width;
 
           // Random sample inside the pixel;
           x += (randf() - .5) * pixelSize;
@@ -54,7 +50,7 @@ class Renderer {
 
           Vec3f dir = Vec3f(x, y, -1).normalize();
 
-          Vec3f sampleColor = tracer->trace(scene, camOrig, dir);
+          Vec3f sampleColor = tracer->trace(scene, scene.camera.pos, dir);
           color = color + sampleColor;
         }
         color = color * (1.f / config.spp);

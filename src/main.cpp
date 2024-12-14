@@ -23,6 +23,8 @@
 std::shared_ptr<Scene> makeCornellBoxScene() {
   std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
+  scene->camera = Camera{.pos = {.275, .275, .8}, .fov = 39.3076 * M_PI / 180};
+
   scene->lights.push_back(
       std::make_shared<PointLight>(Vec3f(.275, .548, -.275), Vec3f(1)));
 
