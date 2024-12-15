@@ -11,7 +11,7 @@ struct CliArgs {
 };
 
 inline CliArgs argparse(int argc, char *argv[]) {
-  std::string example = argc > 1 ? argv[1] : "whitted";
+  std::string example = argc > 1 ? argv[1] : "";
   int spp = argc > 2 ? atoi(argv[2]) : 10;
   int width = argc > 3 ? atoi(argv[3]) : 512;
   int height = argc > 4 ? atoi(argv[4]) : 512;
@@ -26,10 +26,11 @@ inline CliArgs argparse(int argc, char *argv[]) {
 
 inline void printUsage() {
   std::string usage =
-      "Usage: main [example] [spp] [width] [height] [seed]\n"
+      "Usage: main <example> [<spp>] [<width>] [<height>] [<seed>]\n"
       "\n"
       "Options:\n"
-      "  example\t\"whitted\", \"recursive\", \"simple\" (default: whitted)\n"
+      "  example\t\"whitted\", \"recursive\", \"simple\" (roughness=20), "
+      "\"simple0\" (roughness=0), \"simple10\" (roughness=10)\n"
       "  spp\t\tnumber of samples per pixel (default: 10)\n"
       "  width\t\twidth of the rendered output in pixel (default: 512)\n"
       "  height\theight of the rendered output in pixel (default: 512)\n"
