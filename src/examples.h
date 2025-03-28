@@ -26,13 +26,14 @@ struct Project {
 inline void saveRender(const Renderer &renderer, const Project &project) {
   auto &args = project.config;
   auto name = project.name.empty() ? "out" : project.name;
-  std::string filename = name;
-  filename += std::format("_{:d}spp", args.spp);
+  std::string filename = std::format("{:s}_{:d}spp", name, args.spp);
 
-  save(renderer.framebuffer, renderer.config.width, renderer.config.height,
-       filename);
+  // Save to PNG
+  std::string filepath = filename + ".png";
+  saveToPNG(renderer.framebuffer, renderer.config.width, renderer.config.height,
+            filepath);
 
-  printf("Saved to file \"%s.ppm\"\n", filename.c_str());
+  printf("Saved to file \"%s\"\n", filepath.c_str());
 }
 
 // Cornell Box Scene for WhittedRaytracer with PhongMaterial + PointLight
