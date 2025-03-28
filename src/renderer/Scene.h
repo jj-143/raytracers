@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -36,7 +37,9 @@ class Scene {
 
   inline std::optional<Intersection> intersect(const Vec3f &origin,
                                                const Vec3f &dir) const {
-    float t0 = MAXFLOAT;
+    // TODO: Pass min/max distance from argument.
+    float MAX_DIST = std::numeric_limits<float>().max();
+    float t0 = MAX_DIST;
     Vec3f hit;
     Vec3f N;
     std::shared_ptr<SceneObject> object;
@@ -52,7 +55,7 @@ class Scene {
         object = obj;
       }
     }
-    if (t0 < MAXFLOAT) {
+    if (t0 < MAX_DIST) {
       return Intersection{.hit = hit, .n = N, .object = object};
     }
     return {};
