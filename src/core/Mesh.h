@@ -18,7 +18,7 @@ class Mesh {
   Mesh(const Vec3f pos, const std::string name = "") : pos(pos), name(name) {}
 };
 
-class Sampler {
+class Samplable {
  public:
   virtual inline float pdf(const Vec3f &direction, const Vec3f &origin) const {
     return 0;
@@ -29,7 +29,7 @@ class Sampler {
   }
 };
 
-class SamplableMesh : public Mesh, public Sampler {
+class SamplableMesh : public Mesh, public Samplable {
   using Mesh::Mesh;
 };
 
