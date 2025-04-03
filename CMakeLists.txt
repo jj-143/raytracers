@@ -23,6 +23,13 @@ target_include_directories(${PROJECT_NAME}
   PRIVATE dependencies
 )
 
-if(OpenMP_CXX_FOUND)
-  target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
-endif()
+# argparse
+include(FetchContent)
+FetchContent_Declare(
+  argparse
+  GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+  GIT_TAG v3.2
+)
+FetchContent_MakeAvailable(argparse)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX argparse)
