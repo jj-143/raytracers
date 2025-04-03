@@ -41,6 +41,54 @@ class RandomSampler : public Sampler {
   inline Vec2f get2D() override { return {uniform(), uniform()}; }
 };
 
+class StratefiedSampler : public Sampler {
+ public:
+  StratefiedSampler(int xPixelSamples, int yPixelSamples, bool jitter,
+                    int seed = 0)
+      : Sampler(xPixelSamples * yPixelSamples, seed),
+        xPixelSamples(xPixelSamples),
+        yPixelSamples(yPixelSamples),
+        jitter(jitter) {}
+
+  inline void startPixelSample(Vec2i p, int index, int dim = 0) override {
+    pixel = p;
+    sampleIndex = index;
+    dimension = dim;
+
+    rng.seed(SamplerUtil::hash(p.x, p.y, seed));
+    rng.advance(index * 65536ull + dimension);
+  }
+
+  inline float get1D() override {
+    size_t hash = SamplerUtil::hash(pixel.x, pixel.y, dimension, seed);
+    int stratum = SamplerUtil::permutationElement(sampleIndex, spp, hash);
+    dimension++;
+
+    float delta = jitter ? uniform() : 0.5f;
+    return (stratum + delta) / spp;
+  }
+
+  inline Vec2f get2D() override {
+    size_t hash = SamplerUtil::hash(pixel.x, pixel.y, dimension, seed);
+    int stratum = SamplerUtil::permutationElement(sampleIndex, spp, hash);
+    dimension += 2;
+
+    int x = stratum % xPixelSamples;
+    int y = stratum / xPixelSamples;
+
+    float dx = jitter ? uniform() : 0.5f;
+    float dy = jitter ? uniform() : 0.5f;
+
+    return {(x + dx) / xPixelSamples, (y + dy) / yPixelSamples};
+  }
+
+ private:
+  int xPixelSamples, yPixelSamples;
+  bool jitter;
+  Vec2i pixel;
+  int sampleIndex = 0, dimension = 0;
+};
+
 /**
  * Using thread's sampler
  */
@@ -48,7 +96,10 @@ class RandomSampler : public Sampler {
 thread_local std::shared_ptr<Sampler> sampler;
 
 inline std::shared_ptr<Sampler> InitSampler(int spp, int seed) {
-  sampler = std::make_shared<RandomSampler>(spp, seed);
+  int xPixelSamples = std::sqrt(spp);
+  int yPixelSamples = (spp / xPixelSamples);
+  sampler = std::make_shared<StratefiedSampler>(xPixelSamples, yPixelSamples,
+                                                true, seed);
   return sampler;
 }
 
