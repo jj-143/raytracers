@@ -10,7 +10,7 @@ struct CliArgs {
   int seed;
 };
 
-inline CliArgs argparse(int argc, char *argv[]) {
+inline CliArgs parseArgs(int argc, char *argv[]) {
   std::string example = argc > 1 ? argv[1] : "";
   int spp = argc > 2 ? atoi(argv[2]) : 10;
   int width = argc > 3 ? atoi(argv[3]) : 512;

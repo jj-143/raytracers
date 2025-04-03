@@ -5,7 +5,7 @@
 #include "renderer/Renderer.h"
 
 int main(int argc, char *argv[]) {
-  CliArgs args = argparse(argc, argv);
+  CliArgs args = parseArgs(argc, argv);
 
   std::optional<example::Project> project = example::makeExampleProject(args);
 
