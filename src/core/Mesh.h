@@ -3,7 +3,7 @@
 #include <string>
 
 #include "../math.h"
-#include "../rng.h"
+#include "Sampler.h"
 
 class Mesh {
  public:
@@ -102,8 +102,9 @@ class Plane : public SamplableMesh {
   }
 
   Vec3f generate(const Vec3f &origin) const override {
-    Vec3f p = Vec3f(randf(pos.x - halfWidth, pos.x + halfWidth), pos.y,
-                    randf(pos.z - halfHeight, pos.z + halfHeight));
+    Vec2f u = Sampler::Get2D();
+    Vec3f p{pos.x + u.x * 2 * halfWidth - halfWidth, pos.y,
+            pos.z + u.y * 2 * halfHeight - halfHeight};
     return (p - origin).normalize();
   }
 

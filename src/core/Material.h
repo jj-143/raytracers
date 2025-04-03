@@ -5,8 +5,8 @@
 #include <optional>
 
 #include "../math.h"
-#include "../rng.h"
 #include "Distribution.h"
+#include "Sampler.h"
 #include "common.h"
 
 enum class MaterialType { BSDF, Emission, Phong };
@@ -113,7 +113,7 @@ class DielectricBSDF : public Material {
     Vec3f N = isInside ? Vec3f(0, 0, -1) : Vec3f(0, 0, 1);
 
     bool isAllowedAngle = refract(-ro, N, eta, ri);
-    bool isTransmission = isAllowedAngle && randf() < (1 - R);
+    bool isTransmission = isAllowedAngle && Sampler::Get1D() < (1 - R);
 
     if (isTransmission) {
       ri.normalize();
@@ -190,7 +190,7 @@ class DielectricCoatBRDF : public Microfacet {
     Vec3f N = isInside ? Vec3f(0, 0, -1) : Vec3f(0, 0, 1);
 
     bool isAllowedAngle = refract(-ro, N, eta, ri);
-    bool isTransmission = isAllowedAngle && randf() < (1 - R);
+    bool isTransmission = isAllowedAngle && Sampler::Get1D() < (1 - R);
 
     // Transmission
     if (isTransmission) return DistributionSample(Ray::Transmission);

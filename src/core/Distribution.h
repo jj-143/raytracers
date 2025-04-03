@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../math.h"
-#include "../rng.h"
+#include "Sampler.h"
 #include "common.h"
 
 class Distribution {
@@ -31,13 +31,12 @@ class DistributionSample {
 class CosineDistribution : public Distribution {
  public:
   Vec3f sample(const Vec3f& wo) const override {
-    float r1 = randf();
-    float r2 = randf();
+    Vec2f u = Sampler::Get2D();
 
-    float phi = 2 * M_PI * r1;
-    float x = std::cos(phi) * std::sqrt(r2);
-    float y = std::sin(phi) * std::sqrt(r2);
-    float z = std::sqrt(1 - r2);
+    float phi = 2 * M_PI * u.x;
+    float x = std::cos(phi) * std::sqrt(u.y);
+    float y = std::sin(phi) * std::sqrt(u.y);
+    float z = std::sqrt(1 - u.y);
 
     Vec3f wi(x, y, z);
     if (wo.z < 0) wi.z *= -1;
@@ -89,13 +88,13 @@ class GGXDistribution : public Distribution {
 
   Vec3f sampleWh(const Vec3f& wo) const {
     // Sample angles for isotropic GGX variant
-    float u[2] = {randf(), randf()};
+    Vec2f u = Sampler::Get2D();
     float beta = alpha * alpha - 1;
 
     float cos2theta =
-        1 / (beta * beta) * ((beta + 1) / (u[0] + 1 / beta) - beta);
+        1 / (beta * beta) * ((beta + 1) / (u.x + 1 / beta) - beta);
     cos2theta = std::fmax(0, cos2theta);
-    float phi = u[1] * 2 * M_PI;
+    float phi = u.y * 2 * M_PI;
 
     // Map sampled angles to normal direction wh
     float cosTheta = std::sqrt(cos2theta);

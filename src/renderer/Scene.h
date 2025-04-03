@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "../core/Mesh.h"
-#include "../rng.h"
+#include "../core/Sampler.h"
 #include "SceneObject.h"
 
 struct Camera {
@@ -63,7 +63,8 @@ class Scene {
 
   std::shared_ptr<LightObject> sampleLight() const {
     if (!lights.size()) return nullptr;
-    int idx = randInt() % lights.size();
+    int idx =
+        std::min<int>(Sampler::Get1D() * lights.size(), lights.size() - 1);
     return lights[idx];
   }
 };

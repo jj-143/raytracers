@@ -3,8 +3,8 @@
 #include <optional>
 
 #include "../core/Material.h"
+#include "../core/Sampler.h"
 #include "../onb.h"
-#include "../rng.h"
 #include "Scene.h"
 
 class Tracer {
@@ -159,7 +159,7 @@ class RecursivePathtracer : public Tracer {
       return bs->fValue * Li;
     }
 
-    bool isLightSampling = randf() < .5;
+    bool isLightSampling = Sampler::Get1D() < .5;
     const auto &light = scene.sampleLight();
 
     if (isLightSampling && light) {

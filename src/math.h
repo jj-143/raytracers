@@ -4,11 +4,6 @@
 #include <cmath>
 #include <iostream>
 
-template <typename T>
-inline T _rand() {
-  return static_cast<T>(rand()) / static_cast<T>(RAND_MAX);
-}
-
 template <size_t DIM, typename T>
 struct vec {
   vec() { for (size_t i = DIM; i--; data_[i] = T()); }
@@ -26,6 +21,7 @@ struct vec {
 };
 
 typedef vec<2, float> Vec2f;
+typedef vec<2, int> Vec2i;
 typedef vec<3, float> Vec3f;
 typedef vec<3, int> Vec3i;
 typedef vec<4, float> Vec4f;
@@ -93,28 +89,6 @@ struct vec<3, T> {
   vec<3, T>& normalize(T l = 1) {
     *this = (*this) * (l / norm());
     return *this;
-  }
-  inline static vec<3, T> rand() {
-    return vec<3, T>(_rand<T>(), _rand<T>(), _rand<T>());
-  }
-  inline static vec<3, T> rand(T min, T max) {
-    return vec<3, T>(_rand<T>() * (max - min) + min,
-                     _rand<T>() * (max - min) + min,
-                     _rand<T>() * (max - min) + min);
-  }
-  inline static vec<3, T> rand_unit() {
-    while (true) {
-      auto p = vec<3, T>::rand(-1, 1);
-      auto length_squared = p.x * p.x + p.y * p.y + p.z * p.z;
-      if (length_squared <= 1) {
-        auto len = std::sqrt(length_squared);
-        return vec<3, T>(p.x / len, p.y / len, p.z / len);
-      }
-    }
-  }
-  inline static vec<3, T> rand_unit(const vec<3, T>& dir) {
-    vec<3, T> p = vec<3, T>::rand_unit();
-    return p * dir > 0 ? p : -p;
   }
   T x, y, z;
 };
