@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <random>
 
 #include "SamplerUtil.h"
+#include "math.h"
 #include "pcg_random.hpp"
 
 namespace Sampler {
@@ -93,7 +95,7 @@ class StratefiedSampler : public Sampler {
  * Using thread's sampler
  */
 
-thread_local std::shared_ptr<Sampler> sampler;
+inline thread_local std::shared_ptr<Sampler> sampler;
 
 inline std::shared_ptr<Sampler> InitSampler(int spp, int seed) {
   int xPixelSamples = std::sqrt(spp);

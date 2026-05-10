@@ -2,10 +2,10 @@
 
 #include <optional>
 
-#include "../core/Material.h"
-#include "../core/Sampler.h"
-#include "../onb.h"
+#include "Material.h"
+#include "Sampler.h"
 #include "Scene.h"
+#include "onb.h"
 
 class Tracer {
  public:

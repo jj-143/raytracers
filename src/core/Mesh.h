@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "../math.h"
 #include "Sampler.h"
+#include "math.h"
 
 class Mesh {
  public:

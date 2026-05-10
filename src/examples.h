@@ -5,14 +5,14 @@
 #include <optional>
 #include <string>
 
+#include "Material.h"
+#include "Mesh.h"
+#include "Renderer.h"
+#include "Scene.h"
+#include "SceneObject.h"
+#include "Tracer.h"
 #include "cli.h"
-#include "core/Material.h"
-#include "core/Mesh.h"
 #include "math.h"
-#include "renderer/Renderer.h"
-#include "renderer/Scene.h"
-#include "renderer/SceneObject.h"
-#include "renderer/Tracer.h"
 #include "utils.h"
 
 namespace example {

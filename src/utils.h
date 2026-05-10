@@ -1,6 +1,8 @@
 #pragma once
 
-#include <string>
+#include <vector>
+
+#include "math.h"
 
 float gammaTransform(float value, float gamma);
 

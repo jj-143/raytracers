@@ -4,10 +4,10 @@
 #include <memory>
 #include <optional>
 
-#include "../math.h"
 #include "Distribution.h"
 #include "Sampler.h"
 #include "common.h"
+#include "math.h"
 
 enum class MaterialType { BSDF, Emission, Phong };
 

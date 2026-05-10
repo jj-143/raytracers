@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../math.h"
 #include "Sampler.h"
 #include "common.h"
+#include "math.h"
 
 class Distribution {
  public:

@@ -1,6 +1,10 @@
 #pragma once
 
-#include "pcg_random.hpp"
+#include <bit>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <limits>
 
 namespace {
 

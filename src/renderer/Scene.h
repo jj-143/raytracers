@@ -5,8 +5,8 @@
 #include <optional>
 #include <vector>
 
-#include "../core/Mesh.h"
-#include "../core/Sampler.h"
+#include "Mesh.h"
+#include "Sampler.h"
 #include "SceneObject.h"
 
 struct Camera {

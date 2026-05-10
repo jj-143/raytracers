@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "../core/Material.h"
-#include "../core/Mesh.h"
+#include "Material.h"
+#include "Mesh.h"
 
 class SceneObject {
  public:

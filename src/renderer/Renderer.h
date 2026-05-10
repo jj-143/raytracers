@@ -2,11 +2,11 @@
 
 #include <memory>
 
-#include "../core/Sampler.h"
-#include "../math.h"
-#include "../utils.h"
+#include "Sampler.h"
 #include "Scene.h"
 #include "Tracer.h"
+#include "math.h"
+#include "utils.h"
 
 struct RenderConfig {
   int width;
