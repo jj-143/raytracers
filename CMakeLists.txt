@@ -19,9 +19,14 @@ add_executable(
   ${src}
 )
 
-target_include_directories(${PROJECT_NAME}
-  PRIVATE dependencies
+set(inc
+  "src/core"
+  "src/renderer"
+  "src"
+  "dependencies"
 )
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${inc})
 
 # argparse
 include(FetchContent)
