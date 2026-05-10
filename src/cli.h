@@ -11,4 +11,4 @@ struct CliArgs {
   int seed;
 };
 
-std::optional<CliArgs> parseArgs(int argc, char *argv[]);
+std::optional<CliArgs> parseArgs(int argc, char* argv[]);

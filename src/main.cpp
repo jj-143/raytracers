@@ -4,7 +4,7 @@
 #include "examples.h"
 #include "renderer/Renderer.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::optional<CliArgs> args = parseArgs(argc, argv);
   if (!args) exit(2);
 

@@ -23,8 +23,8 @@ struct Project {
   std::string name;
 };
 
-inline void saveRender(const Renderer &renderer, const Project &project) {
-  auto &args = project.config;
+inline void saveRender(const Renderer& renderer, const Project& project) {
+  auto& args = project.config;
   auto name = project.name.empty() ? "out" : project.name;
   std::string filename = std::format("{:s}_{:d}spp", name, args.spp);
 

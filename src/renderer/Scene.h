@@ -35,8 +35,8 @@ class Scene {
     this->lights.push_back(light);
   }
 
-  inline std::optional<Intersection> intersect(const Vec3f &origin,
-                                               const Vec3f &dir) const {
+  inline std::optional<Intersection> intersect(const Vec3f& origin,
+                                               const Vec3f& dir) const {
     // TODO: Pass min/max distance from argument.
     float MAX_DIST = std::numeric_limits<float>().max();
     float t0 = MAX_DIST;
@@ -44,8 +44,8 @@ class Scene {
     Vec3f N;
     std::shared_ptr<SceneObject> object;
 
-    for (auto &obj : objects) {
-      const Mesh &mesh = *obj->target;
+    for (auto& obj : objects) {
+      const Mesh& mesh = *obj->target;
       float tempDist = 0;
       Vec3f tempN;
       if (mesh.intersect(origin, dir, tempDist, tempN) && tempDist < t0) {

@@ -10,8 +10,8 @@ class Mesh {
   std::string name;
   Vec3f pos;
 
-  virtual inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                                Vec3f &N) const {
+  virtual inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
+                                Vec3f& N) const {
     return false;
   }
 
@@ -20,11 +20,11 @@ class Mesh {
 
 class Samplable {
  public:
-  virtual inline float pdf(const Vec3f &direction, const Vec3f &origin) const {
+  virtual inline float pdf(const Vec3f& direction, const Vec3f& origin) const {
     return 0;
   }
 
-  virtual inline Vec3f generate(const Vec3f &origin) const {
+  virtual inline Vec3f generate(const Vec3f& origin) const {
     return Vec3f(1, 0, 0);
   }
 };
@@ -37,8 +37,8 @@ class Sphere : public Mesh {
  public:
   float radius;
 
-  inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                        Vec3f &N) const override {
+  inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
+                        Vec3f& N) const override {
     Vec3f L = (pos - orig);
     float tca = dot(L, dir);
     float d2 = dot(L, L) - tca * tca;
@@ -65,8 +65,8 @@ class Plane : public SamplableMesh {
   float halfHeight;
   Vec3f normal = Vec3f(0, 1, 0);
 
-  inline bool intersect(const Vec3f &orig, const Vec3f &dir, float &t0,
-                        Vec3f &N) const override {
+  inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
+                        Vec3f& N) const override {
     Vec3f L = (pos - orig);
     float dirDotNormal = dot(dir, normal);
     if (std::fabs(dirDotNormal) < 1e-8) {
@@ -89,7 +89,7 @@ class Plane : public SamplableMesh {
     }
   }
 
-  inline float pdf(const Vec3f &direction, const Vec3f &origin) const override {
+  inline float pdf(const Vec3f& direction, const Vec3f& origin) const override {
     float d;
     Vec3f N;
 
@@ -101,7 +101,7 @@ class Plane : public SamplableMesh {
     return d * d / (NoL * lightArea);
   }
 
-  Vec3f generate(const Vec3f &origin) const override {
+  Vec3f generate(const Vec3f& origin) const override {
     Vec2f u = Sampler::Get2D();
     Vec3f p{pos.x + u.x * 2 * halfWidth - halfWidth, pos.y,
             pos.z + u.y * 2 * halfHeight - halfHeight};

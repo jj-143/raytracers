@@ -24,7 +24,7 @@ class Renderer {
 
   Renderer(std::shared_ptr<Tracer> tracer) : tracer(tracer) {};
 
-  inline void render(const Scene &scene) {
+  inline void render(const Scene& scene) {
     float halfFov = scene.camera.fov / 2.;
     float pixelSize = tan(halfFov) / config.width;
 

@@ -9,7 +9,7 @@
 
 class Tracer {
  public:
-  virtual inline Vec3f trace(const Scene &scene, Vec3f orig, Vec3f dir) {
+  virtual inline Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     return Vec3f(0);
   }
 };
@@ -25,7 +25,7 @@ class WhittedRaytracer : public Tracer {
   const int MAX_REFRACTION_DEPTH = 12;
   const float REFRACTIVE_INDEX_ENVIRONMENT = 1;  // air: 1, water: 1.33
 
-  inline Vec3f trace(const Scene &scene, Vec3f orig, Vec3f dir) override {
+  inline Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) override {
     Vec3f color;
     if (!traceBack(scene, orig, dir, color)) {
       return BACKGROUND_COLOR;
@@ -33,8 +33,8 @@ class WhittedRaytracer : public Tracer {
     return color;
   }
 
-  inline bool traceBack(const Scene &scene, const Vec3f &orig, const Vec3f dir,
-                        Vec3f &color, int depthReflection = 0,
+  inline bool traceBack(const Scene& scene, const Vec3f& orig, const Vec3f dir,
+                        Vec3f& color, int depthReflection = 0,
                         int depthRefraction = 0) {
     // Also discard the ray if it exceeds maximum depth as if it doesn't hit
     // anything.
@@ -48,9 +48,9 @@ class WhittedRaytracer : public Tracer {
     std::optional<Intersection> intr = scene.intersect(orig, dir);
     if (!intr) return false;
 
-    Vec3f &hit = intr->hit;
-    Vec3f &n = intr->n;
-    PhongMaterial &material =
+    Vec3f& hit = intr->hit;
+    Vec3f& n = intr->n;
+    PhongMaterial& material =
         *std::static_pointer_cast<PhongMaterial>(intr->object->material);
 
     // Casting reflection ray
@@ -85,7 +85,7 @@ class WhittedRaytracer : public Tracer {
     Vec3f diffColor;
     Vec3f specColor;
 
-    for (auto &light : scene.lights) {
+    for (auto& light : scene.lights) {
       Vec3f dirLight = (light->target->pos - hit).normalize();
       float NoL = dot(n, dirLight);
 
@@ -128,19 +128,19 @@ class RecursivePathtracer : public Tracer {
  public:
   int maxDepth = 8;
 
-  Vec3f trace(const Scene &scene, Vec3f orig, Vec3f dir) override {
+  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) override {
     return traceBack(orig, dir, scene);
   }
 
-  Vec3f traceBack(const Vec3f &orig, const Vec3f dir, const Scene &scene,
+  Vec3f traceBack(const Vec3f& orig, const Vec3f dir, const Scene& scene,
                   int depth = 0) {
     if (depth > maxDepth) return Vec3f(0);
 
     std::optional<Intersection> intr = scene.intersect(orig, dir);
     if (!intr) return Vec3f(0);
 
-    Vec3f &hit = intr->hit;
-    Material &bsdf = *intr->object->material;
+    Vec3f& hit = intr->hit;
+    Material& bsdf = *intr->object->material;
     ONB onb = ONB(intr->n);           // orthonormal basis with surface normal
     Ray ro = onb.toLocalSpace(-dir);  // view ray "outgoing ray"
     Ray ri;                           // light ray "incoming ray"
@@ -160,7 +160,7 @@ class RecursivePathtracer : public Tracer {
     }
 
     bool isLightSampling = Sampler::Get1D() < .5;
-    const auto &light = scene.sampleLight();
+    const auto& light = scene.sampleLight();
 
     if (isLightSampling && light) {
       wiW = light->sampler->generate(hit);
@@ -192,7 +192,7 @@ class SimplePathtracer : public Tracer {
  public:
   int maxDepth = 8;
 
-  Vec3f trace(const Scene &scene, Vec3f orig, Vec3f dir) override {
+  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) override {
     int depth = 0;                 // trace depth
     bool isSpecularBounce = true;  // initially true for direct Emission hit
     Ray ro;                        // view ray "outgoing ray"
@@ -207,8 +207,8 @@ class SimplePathtracer : public Tracer {
       std::optional<Intersection> intr = scene.intersect(orig, -woW);
       if (!intr) break;
 
-      Vec3f &hit = intr->hit;
-      Material &bsdf = *intr->object->material;
+      Vec3f& hit = intr->hit;
+      Material& bsdf = *intr->object->material;
       ONB onb = ONB(intr->n);
       ro = onb.toLocalSpace(woW);
 
@@ -260,12 +260,12 @@ class SimplePathtracer : public Tracer {
     std::shared_ptr<LightObject> light;
   };
 
-  std::optional<LightSample> sampleDirectLight(const Scene &scene,
-                                               const Vec3f &pos) const {
-    const auto &light = scene.sampleLight();
+  std::optional<LightSample> sampleDirectLight(const Scene& scene,
+                                               const Vec3f& pos) const {
+    const auto& light = scene.sampleLight();
     if (!light) return {};
 
-    auto &sampler = *light->sampler;
+    auto& sampler = *light->sampler;
     Vec3f wlW = sampler.generate(pos);
 
     std::optional<Intersection> intr = scene.intersect(pos + wlW * 1e-3, wlW);

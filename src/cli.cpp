@@ -2,7 +2,7 @@
 
 #include <argparse/argparse.hpp>
 
-std::optional<CliArgs> parseArgs(int argc, char *argv[]) {
+std::optional<CliArgs> parseArgs(int argc, char* argv[]) {
   CliArgs args;
   argparse::ArgumentParser program("raytracers", "1.0",
                                    argparse::default_arguments::help);
@@ -50,7 +50,7 @@ std::optional<CliArgs> parseArgs(int argc, char *argv[]) {
   /* Parse */
   try {
     program.parse_args(argc, argv);
-  } catch (const std::exception &err) {
+  } catch (const std::exception& err) {
     // Prints usage and help
     std::cerr << err.what() << std::endl;
     std::cerr << program;
