@@ -163,7 +163,7 @@ class RecursivePathtracer : public Tracer {
     const auto& light = scene.sampleLight();
 
     if (isLightSampling && light) {
-      wiW = light->sampler->generate(hit);
+      wiW = light->mesh->generate(hit);
       ri = onb.toLocalSpace(wiW);
     } else {
       ri = ds.sample(ro);
@@ -175,7 +175,7 @@ class RecursivePathtracer : public Tracer {
     float NoL = ri.z;
     if (NoL < 0) return Vec3f(0);
 
-    float lightPdf = light ? light->sampler->pdf(wiW, hit) : 0;
+    float lightPdf = light ? light->mesh->pdf(wiW, hit) : 0;
     float pdf = (lightPdf + bs->pdf) / 2;
     if (pdf < 1e-6) return Vec3f(0);
 
@@ -265,14 +265,14 @@ class SimplePathtracer : public Tracer {
     const auto& light = scene.sampleLight();
     if (!light) return {};
 
-    auto& sampler = *light->sampler;
-    Vec3f wlW = sampler.generate(pos);
+    auto& mesh = *light->mesh;
+    Vec3f wlW = mesh.generate(pos);
 
     std::optional<Intersection> intr = scene.intersect(pos + wlW * 1e-3, wlW);
     bool occuluded = !intr || intr->object != light;
     if (occuluded) return {};
 
-    float lightPdf = sampler.pdf(wlW, pos);
+    float lightPdf = mesh.pdf(wlW, pos);
     if (lightPdf < 1e-6) return {};
 
     return LightSample{.pdf = lightPdf, .dir = wlW, .light = light};

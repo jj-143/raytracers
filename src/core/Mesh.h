@@ -16,10 +16,7 @@ class Mesh {
   }
 
   Mesh(const Vec3f pos, const std::string name = "") : pos(pos), name(name) {}
-};
 
-class Samplable {
- public:
   virtual inline float pdf(const Vec3f& direction, const Vec3f& origin) const {
     return 0;
   }
@@ -27,10 +24,6 @@ class Samplable {
   virtual inline Vec3f generate(const Vec3f& origin) const {
     return Vec3f(1, 0, 0);
   }
-};
-
-class SamplableMesh : public Mesh, public Samplable {
-  using Mesh::Mesh;
 };
 
 class Sphere : public Mesh {
@@ -59,7 +52,7 @@ class Sphere : public Mesh {
       : Mesh(p, name), radius(r) {}
 };
 
-class Plane : public SamplableMesh {
+class Plane : public Mesh {
  public:
   float halfWidth;
   float halfHeight;
@@ -110,7 +103,7 @@ class Plane : public SamplableMesh {
 
   Plane(Vec3f p, float w, float h, Vec3f normal,
         const std::string name = "Plane")
-      : SamplableMesh(p, name), halfWidth(w), halfHeight(h), normal(normal) {
+      : Mesh(p, name), halfWidth(w), halfHeight(h), normal(normal) {
     this->normal = normal.normalize();
     Vec3f up = {0, 1, 0};
     Vec3f right = cross(up, this->normal);

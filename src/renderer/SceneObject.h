@@ -17,15 +17,15 @@ class SceneObject {
 
 class LightObject : public SceneObject {
  public:
-  std::shared_ptr<SamplableMesh> sampler;
+  std::shared_ptr<Mesh> mesh;
 
-  LightObject(std::shared_ptr<SamplableMesh> m, std::shared_ptr<Emission> mat)
-      : SceneObject(m, mat), sampler(m) {}
+  LightObject(std::shared_ptr<Mesh> m, std::shared_ptr<Emission> mat)
+      : SceneObject(m, mat), mesh(m) {}
 };
 
 class PointLight : public LightObject {
  public:
   PointLight(Vec3f pos, Vec3f color = Vec3f(1), float strength = 1)
-      : LightObject(std::make_shared<SamplableMesh>(pos),
+      : LightObject(std::make_shared<Mesh>(pos),
                     std::make_shared<Emission>(color, strength)) {}
 };
