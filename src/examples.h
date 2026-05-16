@@ -45,16 +45,16 @@ inline std::shared_ptr<Scene> CornellBoxPhong() {
   auto& alloc = scene->allocator;
 
   // clang-format off
-  auto sRed      = alloc.emplaceMesh<Sphere>(Vec3f(.425, .080, -.344), .08, "Sphere.red");
-  auto sGreen    = alloc.emplaceMesh<Sphere>(Vec3f(.125, .080, -.344), .08, "Sphere.green");
-  auto sYellow   = alloc.emplaceMesh<Sphere>(Vec3f(.195, .275, -.470), .08, "Sphere.yellow");
-  auto sMirror   = alloc.emplaceMesh<Sphere>(Vec3f(.355, .275, -.470), .08, "Sphere.mirror");
-  auto sGlass    = alloc.emplaceMesh<Sphere>(Vec3f(.275, .080, -.140), .08, "Sphere.glass");
-  auto floor     = alloc.emplaceMesh<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0), "Plane.floor");
-  auto ceiling   = alloc.emplaceMesh<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0), "Plane.ceiling");
-  auto wallLeft  = alloc.emplaceMesh<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0), "Plane.wallLeft");
-  auto wallRight = alloc.emplaceMesh<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
-  auto wallBack  = alloc.emplaceMesh<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
+  auto sRed      = alloc.emplaceMesh<Sphere>(Vec3f(.425, .080, -.344), .08);
+  auto sGreen    = alloc.emplaceMesh<Sphere>(Vec3f(.125, .080, -.344), .08);
+  auto sYellow   = alloc.emplaceMesh<Sphere>(Vec3f(.195, .275, -.470), .08);
+  auto sMirror   = alloc.emplaceMesh<Sphere>(Vec3f(.355, .275, -.470), .08);
+  auto sGlass    = alloc.emplaceMesh<Sphere>(Vec3f(.275, .080, -.140), .08);
+  auto floor     = alloc.emplaceMesh<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0));
+  auto ceiling   = alloc.emplaceMesh<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0));
+  auto wallLeft  = alloc.emplaceMesh<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0));
+  auto wallRight = alloc.emplaceMesh<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0));
+  auto wallBack  = alloc.emplaceMesh<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1));
 
   auto red       = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f(.5,  0,  0), {.3, .01,  0},  800,   1});
   auto green     = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f( 0, .5,  0), {.3, .01,  0},  800,   1});
@@ -91,17 +91,17 @@ inline std::shared_ptr<Scene> CornellBoxBSDF(float roughness = .2) {
   auto& alloc = scene->allocator;
 
   // clang-format off
-  auto sRed      = alloc.emplaceMesh<Sphere>(Vec3f(.425, .080, -.344), .080, "Sphere.red");
-  auto sGreen    = alloc.emplaceMesh<Sphere>(Vec3f(.125, .080, -.344), .080, "Sphere.green");
-  auto sYellow   = alloc.emplaceMesh<Sphere>(Vec3f(.195, .275, -.470), .080, "Sphere.yellow");
-  auto sMirror   = alloc.emplaceMesh<Sphere>(Vec3f(.355, .275, -.470), .080, "Sphere.mirror");
-  auto sGlass    = alloc.emplaceMesh<Sphere>(Vec3f(.275, .080, -.140), .080, "Sphere.glass");
-  auto floor     = alloc.emplaceMesh<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0), "Plane.floor");
-  auto ceiling   = alloc.emplaceMesh<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0), "Plane.ceiling");
-  auto wallLeft  = alloc.emplaceMesh<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0), "Plane.wallLeft");
-  auto wallRight = alloc.emplaceMesh<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
-  auto wallBack  = alloc.emplaceMesh<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
-  auto areaLight = alloc.emplaceMesh<Plane> (Vec3f(.275, .548, -.275), .065, .065, Vec3f(0,-1, 0), "Plane.AreaLight");
+  auto sRed      = alloc.emplaceMesh<Sphere>(Vec3f(.425, .080, -.344), .080);
+  auto sGreen    = alloc.emplaceMesh<Sphere>(Vec3f(.125, .080, -.344), .080);
+  auto sYellow   = alloc.emplaceMesh<Sphere>(Vec3f(.195, .275, -.470), .080);
+  auto sMirror   = alloc.emplaceMesh<Sphere>(Vec3f(.355, .275, -.470), .080);
+  auto sGlass    = alloc.emplaceMesh<Sphere>(Vec3f(.275, .080, -.140), .080);
+  auto floor     = alloc.emplaceMesh<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0));
+  auto ceiling   = alloc.emplaceMesh<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0));
+  auto wallLeft  = alloc.emplaceMesh<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0));
+  auto wallRight = alloc.emplaceMesh<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0));
+  auto wallBack  = alloc.emplaceMesh<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1));
+  auto areaLight = alloc.emplaceMesh<Plane> (Vec3f(.275, .548, -.275), .065, .065, Vec3f(0,-1, 0));
 
   auto red       = alloc.emplaceMaterial<GlossyDiffuseLambertBSDF>(Vec3f(.5,  0,  0), roughness, 1.5);
   auto green     = alloc.emplaceMaterial<GlossyDiffuseLambertBSDF>(Vec3f( 0, .5,  0), roughness, 1.5);

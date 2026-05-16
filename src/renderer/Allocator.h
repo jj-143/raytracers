@@ -20,8 +20,8 @@ class Allocator {
   int lightsSize = 0;
 
   template <typename T, typename... Args>
-  T* emplaceMesh(Args&&... args) {
-    T* ptr = new T(std::forward<Args>(args)...);
+  Mesh* emplaceMesh(Args&&... args) {
+    Mesh* ptr = new Mesh(T(std::forward<Args>(args)...));
     meshes[meshesSize++] = ptr;
     return ptr;
   }

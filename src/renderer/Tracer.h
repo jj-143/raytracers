@@ -87,14 +87,14 @@ class WhittedRaytracer : public Tracer {
 
     for (int i = 0; i < scene.allocator.lightsSize; ++i) {
       SceneObject* light = scene.allocator.lights[i];
-      Vec3f dirLight = (light->mesh->pos - hit).normalize();
+      Vec3f dirLight = (light->mesh->pos() - hit).normalize();
       float NoL = dot(n, dirLight);
 
       // Casting shadow ray
       Vec3f shadowOrigin = NoL < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
       if (auto intr = scene.intersect(shadowOrigin, dirLight)) {
         float dHit = (intr->hit - shadowOrigin).norm();
-        float dLight = (light->mesh->pos - shadowOrigin).norm();
+        float dLight = (light->mesh->pos() - shadowOrigin).norm();
         if (dLight - dHit > 1e-3) {
           continue;
         }

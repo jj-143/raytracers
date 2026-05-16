@@ -1,37 +1,19 @@
 #pragma once
 
-#include <string>
+#include <variant>
 
 #include "Sampler.h"
 #include "math.h"
 
-class Mesh {
+class Sphere {
  public:
-  std::string name;
   Vec3f pos;
-
-  virtual inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
-                                Vec3f& N) const {
-    return false;
-  }
-
-  Mesh(const Vec3f pos, const std::string name = "") : pos(pos), name(name) {}
-
-  virtual inline float pdf(const Vec3f& direction, const Vec3f& origin) const {
-    return 0;
-  }
-
-  virtual inline Vec3f generate(const Vec3f& origin) const {
-    return Vec3f(1, 0, 0);
-  }
-};
-
-class Sphere : public Mesh {
- public:
   float radius;
 
+  Sphere(const Vec3f p, const float r) : pos(p), radius(r) {}
+
   inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
-                        Vec3f& N) const override {
+                        Vec3f& N) const {
     Vec3f L = (pos - orig);
     float tca = dot(L, dir);
     float d2 = dot(L, L) - tca * tca;
@@ -48,18 +30,20 @@ class Sphere : public Mesh {
     return true;
   }
 
-  Sphere(const Vec3f p, const float r, const std::string name = "Sphere")
-      : Mesh(p, name), radius(r) {}
+  float pdf(auto, auto) const { return 0; }
+
+  Vec3f generate(auto) const { return {}; }
 };
 
-class Plane : public Mesh {
+class Plane {
  public:
+  Vec3f pos;
   float halfWidth;
   float halfHeight;
   Vec3f normal = Vec3f(0, 1, 0);
 
   inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
-                        Vec3f& N) const override {
+                        Vec3f& N) const {
     Vec3f L = (pos - orig);
     float dirDotNormal = dot(dir, normal);
     if (std::fabs(dirDotNormal) < 1e-8) {
@@ -82,7 +66,7 @@ class Plane : public Mesh {
     }
   }
 
-  inline float pdf(const Vec3f& direction, const Vec3f& origin) const override {
+  inline float pdf(const Vec3f& direction, const Vec3f& origin) const {
     float d;
     Vec3f N;
 
@@ -94,16 +78,15 @@ class Plane : public Mesh {
     return d * d / (NoL * lightArea);
   }
 
-  Vec3f generate(const Vec3f& origin) const override {
+  Vec3f generate(const Vec3f& origin) const {
     Vec2f u = Sampler::Get2D();
     Vec3f p{pos.x + u.x * 2 * halfWidth - halfWidth, pos.y,
             pos.z + u.y * 2 * halfHeight - halfHeight};
     return (p - origin).normalize();
   }
 
-  Plane(Vec3f p, float w, float h, Vec3f normal,
-        const std::string name = "Plane")
-      : Mesh(p, name), halfWidth(w), halfHeight(h), normal(normal) {
+  Plane(Vec3f p, float w, float h, Vec3f normal)
+      : pos(p), halfWidth(w), halfHeight(h), normal(normal) {
     this->normal = normal.normalize();
     Vec3f up = {0, 1, 0};
     Vec3f right = cross(up, this->normal);
@@ -119,4 +102,46 @@ class Plane : public Mesh {
  private:
   Vec3f dirW = Vec3f(1, 0, 0);
   Vec3f dirH = Vec3f(0, 0, -1);
+};
+
+class Mesh {
+  using MeshVariant = std::variant<Plane, Sphere>;
+  MeshVariant mesh;
+
+ public:
+  Mesh(MeshVariant mesh) : mesh(mesh) {}
+
+  Vec3f pos() const {
+    return std::visit([](auto&& m) { return m.pos; }, mesh);
+  }
+
+  bool intersect(const Vec3f& orig, const Vec3f& dir, float& t,
+                 Vec3f& n) const {
+    struct Result {
+      float t = 0;
+      Vec3f n;
+    };
+
+    Result result = std::visit(
+        [orig, dir](auto&& m) -> Result {
+          float t;
+          Vec3f n;
+          if (!m.intersect(orig, dir, t, n)) return {};
+          return {t, n};
+        },
+        mesh);
+
+    t = result.t;
+    n = result.n;
+    return t > 0;
+  }
+
+  float pdf(const Vec3f& pos, const Vec3f& dir) const {
+    return std::visit([pos, dir](auto&& arg) { return arg.pdf(pos, dir); },
+                      mesh);
+  }
+
+  Vec3f generate(const Vec3f& pos) const {
+    return std::visit([pos](auto&& arg) { return arg.generate(pos); }, mesh);
+  }
 };
