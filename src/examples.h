@@ -42,39 +42,42 @@ inline std::shared_ptr<Scene> CornellBoxPhong() {
 
   scene->camera = Camera{.pos = {.275, .275, .8}, .fov = 39.3076 * M_PI / 180};
 
-  scene->lights.push_back(
-      std::make_shared<PointLight>(Vec3f(.275, .548, -.275), Vec3f(1)));
+  auto& alloc = scene->allocator;
 
   // clang-format off
-  auto sRed      = std::make_shared<Sphere>(Vec3f(.425, .080, -.344), .08, "Sphere.red");
-  auto sGreen    = std::make_shared<Sphere>(Vec3f(.125, .080, -.344), .08, "Sphere.green");
-  auto sYellow   = std::make_shared<Sphere>(Vec3f(.195, .275, -.470), .08, "Sphere.yellow");
-  auto sMirror   = std::make_shared<Sphere>(Vec3f(.355, .275, -.470), .08, "Sphere.mirror");
-  auto sGlass    = std::make_shared<Sphere>(Vec3f(.275, .080, -.140), .08, "Sphere.glass");
-  auto floor     = std::make_shared<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0), "Plane.floor");
-  auto ceiling   = std::make_shared<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0), "Plane.ceiling");
-  auto wallLeft  = std::make_shared<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0), "Plane.wallLeft");
-  auto wallRight = std::make_shared<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
-  auto wallBack  = std::make_shared<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
+  auto sRed      = alloc.emplaceMesh<Sphere>(Vec3f(.425, .080, -.344), .08, "Sphere.red");
+  auto sGreen    = alloc.emplaceMesh<Sphere>(Vec3f(.125, .080, -.344), .08, "Sphere.green");
+  auto sYellow   = alloc.emplaceMesh<Sphere>(Vec3f(.195, .275, -.470), .08, "Sphere.yellow");
+  auto sMirror   = alloc.emplaceMesh<Sphere>(Vec3f(.355, .275, -.470), .08, "Sphere.mirror");
+  auto sGlass    = alloc.emplaceMesh<Sphere>(Vec3f(.275, .080, -.140), .08, "Sphere.glass");
+  auto floor     = alloc.emplaceMesh<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0), "Plane.floor");
+  auto ceiling   = alloc.emplaceMesh<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0), "Plane.ceiling");
+  auto wallLeft  = alloc.emplaceMesh<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0), "Plane.wallLeft");
+  auto wallRight = alloc.emplaceMesh<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
+  auto wallBack  = alloc.emplaceMesh<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
 
-  auto red       = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(.5,  0,  0), {.3, .01,  0},  800,   1});
-  auto green     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( 0, .5,  0), {.3, .01,  0},  800,   1});
-  auto yellow    = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(.5, .5,  0), {.3, .01,  0},  800,   1});
-  auto white     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f(.5, .5, .5), {.3, .01,  0},  800,   1});
-  auto mirror    = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( 0,  0,  0), {10,  .8,  0}, 1500,   1});
-  auto glass     = std::make_shared<PhongMaterial>(PhongMaterial{Vec3f( 0,  0,  0), {10, .01, .8}, 1500, 1.5});
+  auto red       = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f(.5,  0,  0), {.3, .01,  0},  800,   1});
+  auto green     = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f( 0, .5,  0), {.3, .01,  0},  800,   1});
+  auto yellow    = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f(.5, .5,  0), {.3, .01,  0},  800,   1});
+  auto white     = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f(.5, .5, .5), {.3, .01,  0},  800,   1});
+  auto mirror    = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f( 0,  0,  0), {10,  .8,  0}, 1500,   1});
+  auto glass     = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f( 0,  0,  0), {10, .01, .8}, 1500, 1.5});
   // clang-format on
 
-  scene->add(std::make_shared<SceneObject>(sRed, red));
-  scene->add(std::make_shared<SceneObject>(sGreen, green));
-  scene->add(std::make_shared<SceneObject>(sYellow, yellow));
-  scene->add(std::make_shared<SceneObject>(sMirror, mirror));
-  scene->add(std::make_shared<SceneObject>(sGlass, glass));
-  scene->add(std::make_shared<SceneObject>(floor, white));
-  scene->add(std::make_shared<SceneObject>(ceiling, white));
-  scene->add(std::make_shared<SceneObject>(wallLeft, red));
-  scene->add(std::make_shared<SceneObject>(wallRight, green));
-  scene->add(std::make_shared<SceneObject>(wallBack, white));
+  alloc.emplaceObject<SceneObject>(sRed, red);
+  alloc.emplaceObject<SceneObject>(sGreen, green);
+  alloc.emplaceObject<SceneObject>(sYellow, yellow);
+  alloc.emplaceObject<SceneObject>(sMirror, mirror);
+  alloc.emplaceObject<SceneObject>(sGlass, glass);
+  alloc.emplaceObject<SceneObject>(floor, white);
+  alloc.emplaceObject<SceneObject>(ceiling, white);
+  alloc.emplaceObject<SceneObject>(wallLeft, red);
+  alloc.emplaceObject<SceneObject>(wallRight, green);
+  alloc.emplaceObject<SceneObject>(wallBack, white);
+
+  auto emission = alloc.emplaceMaterial<Emission>(Vec3f(1));
+  auto pointLight = alloc.emplaceMesh<Sphere>(Vec3f(.275, .548, -.275), 0);
+  alloc.emplaceObject<LightObject>(pointLight, emission);
 
   return scene;
 }
@@ -85,39 +88,41 @@ inline std::shared_ptr<Scene> CornellBoxBSDF(float roughness = .2) {
 
   scene->camera = Camera{.pos = {.275, .275, .8}, .fov = 39.3076 * M_PI / 180};
 
-  // clang-format off
-  auto sRed      = std::make_shared<Sphere>(Vec3f(.425, .080, -.344), .080, "Sphere.red");
-  auto sGreen    = std::make_shared<Sphere>(Vec3f(.125, .080, -.344), .080, "Sphere.green");
-  auto sYellow   = std::make_shared<Sphere>(Vec3f(.195, .275, -.470), .080, "Sphere.yellow");
-  auto sMirror   = std::make_shared<Sphere>(Vec3f(.355, .275, -.470), .080, "Sphere.mirror");
-  auto sGlass    = std::make_shared<Sphere>(Vec3f(.275, .080, -.140), .080, "Sphere.glass");
-  auto floor     = std::make_shared<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0), "Plane.floor");
-  auto ceiling   = std::make_shared<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0), "Plane.ceiling");
-  auto wallLeft  = std::make_shared<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0), "Plane.wallLeft");
-  auto wallRight = std::make_shared<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
-  auto wallBack  = std::make_shared<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
-  auto areaLight = std::make_shared<Plane> (Vec3f(.275, .548, -.275), .065, .065, Vec3f(0,-1, 0), "Plane.AreaLight");
+  auto& alloc = scene->allocator;
 
-  auto red       = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f(.5,  0,  0), roughness, 1.5);
-  auto green     = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f( 0, .5,  0), roughness, 1.5);
-  auto yellow    = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f(.5, .5,  0), roughness, 1.5);
-  auto white     = std::make_shared<GlossyDiffuseLambertBSDF>(Vec3f(.5, .5, .5), roughness, 1.5);
-  auto mirror    = std::make_shared<MetalBSDF>(Vec3f(1, 1, 1));
-  auto glass     = std::make_shared<DielectricBSDF>(1.5);
-  auto light     = std::make_shared<Emission>(Vec3f(25));
+  // clang-format off
+  auto sRed      = alloc.emplaceMesh<Sphere>(Vec3f(.425, .080, -.344), .080, "Sphere.red");
+  auto sGreen    = alloc.emplaceMesh<Sphere>(Vec3f(.125, .080, -.344), .080, "Sphere.green");
+  auto sYellow   = alloc.emplaceMesh<Sphere>(Vec3f(.195, .275, -.470), .080, "Sphere.yellow");
+  auto sMirror   = alloc.emplaceMesh<Sphere>(Vec3f(.355, .275, -.470), .080, "Sphere.mirror");
+  auto sGlass    = alloc.emplaceMesh<Sphere>(Vec3f(.275, .080, -.140), .080, "Sphere.glass");
+  auto floor     = alloc.emplaceMesh<Plane> (Vec3f(.275,    0, -.275), .275, .275, Vec3f(0, 1, 0), "Plane.floor");
+  auto ceiling   = alloc.emplaceMesh<Plane> (Vec3f(.275,  .55, -.275), .275, .275, Vec3f(0,-1, 0), "Plane.ceiling");
+  auto wallLeft  = alloc.emplaceMesh<Plane> (Vec3f(   0, .275, -.275), .275, .275, Vec3f(1, 0, 0), "Plane.wallLeft");
+  auto wallRight = alloc.emplaceMesh<Plane> (Vec3f( .55, .275, -.275), .275, .275, Vec3f(-1,0, 0), "Plane.wallRight");
+  auto wallBack  = alloc.emplaceMesh<Plane> (Vec3f(.275, .275, -.550), .275, .275, Vec3f( 0,0, 1), "Plane.wallBack");
+  auto areaLight = alloc.emplaceMesh<Plane> (Vec3f(.275, .548, -.275), .065, .065, Vec3f(0,-1, 0), "Plane.AreaLight");
+
+  auto red       = alloc.emplaceMaterial<GlossyDiffuseLambertBSDF>(Vec3f(.5,  0,  0), roughness, 1.5);
+  auto green     = alloc.emplaceMaterial<GlossyDiffuseLambertBSDF>(Vec3f( 0, .5,  0), roughness, 1.5);
+  auto yellow    = alloc.emplaceMaterial<GlossyDiffuseLambertBSDF>(Vec3f(.5, .5,  0), roughness, 1.5);
+  auto white     = alloc.emplaceMaterial<GlossyDiffuseLambertBSDF>(Vec3f(.5, .5, .5), roughness, 1.5);
+  auto mirror    = alloc.emplaceMaterial<MetalBSDF>(Vec3f(1, 1, 1));
+  auto glass     = alloc.emplaceMaterial<DielectricBSDF>(1.5);
+  auto light     = alloc.emplaceMaterial<Emission>(Vec3f(25));
 
   // clang-format on
-  scene->add(std::make_shared<SceneObject>(sRed, red));
-  scene->add(std::make_shared<SceneObject>(sGreen, green));
-  scene->add(std::make_shared<SceneObject>(sYellow, yellow));
-  scene->add(std::make_shared<SceneObject>(sMirror, mirror));
-  scene->add(std::make_shared<SceneObject>(sGlass, glass));
-  scene->add(std::make_shared<SceneObject>(floor, white));
-  scene->add(std::make_shared<SceneObject>(ceiling, white));
-  scene->add(std::make_shared<SceneObject>(wallLeft, red));
-  scene->add(std::make_shared<SceneObject>(wallRight, green));
-  scene->add(std::make_shared<SceneObject>(wallBack, white));
-  scene->add(std::make_shared<LightObject>(areaLight, light));
+  alloc.emplaceObject<SceneObject>(sRed, red);
+  alloc.emplaceObject<SceneObject>(sGreen, green);
+  alloc.emplaceObject<SceneObject>(sYellow, yellow);
+  alloc.emplaceObject<SceneObject>(sMirror, mirror);
+  alloc.emplaceObject<SceneObject>(sGlass, glass);
+  alloc.emplaceObject<SceneObject>(floor, white);
+  alloc.emplaceObject<SceneObject>(ceiling, white);
+  alloc.emplaceObject<SceneObject>(wallLeft, red);
+  alloc.emplaceObject<SceneObject>(wallRight, green);
+  alloc.emplaceObject<SceneObject>(wallBack, white);
+  alloc.emplaceObject<LightObject>(areaLight, light);
 
   return scene;
 }

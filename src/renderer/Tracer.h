@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "Sampler.h"
 #include "Scene.h"
+#include "SceneObject.h"
 #include "onb.h"
 
 class Tracer {
@@ -50,8 +51,7 @@ class WhittedRaytracer : public Tracer {
 
     Vec3f& hit = intr->hit;
     Vec3f& n = intr->n;
-    PhongMaterial& material =
-        *std::static_pointer_cast<PhongMaterial>(intr->object->material);
+    PhongMaterial& material = *(PhongMaterial*)(intr->object->material);
 
     // Casting reflection ray
     Vec3f reflectionColor = Vec3f(0, 0, 0);
@@ -85,7 +85,8 @@ class WhittedRaytracer : public Tracer {
     Vec3f diffColor;
     Vec3f specColor;
 
-    for (auto& light : scene.lights) {
+    for (int i = 0; i < scene.allocator.lightsSize; ++i) {
+      LightObject* light = scene.allocator.lights[i];
       Vec3f dirLight = (light->target->pos - hit).normalize();
       float NoL = dot(n, dirLight);
 
@@ -257,7 +258,7 @@ class SimplePathtracer : public Tracer {
   struct LightSample {
     float pdf;
     Vec3f dir;
-    std::shared_ptr<LightObject> light;
+    LightObject* light;
   };
 
   std::optional<LightSample> sampleDirectLight(const Scene& scene,
@@ -269,7 +270,7 @@ class SimplePathtracer : public Tracer {
     Vec3f wlW = mesh.generate(pos);
 
     std::optional<Intersection> intr = scene.intersect(pos + wlW * 1e-3, wlW);
-    bool occuluded = !intr || intr->object != light;
+    bool occuluded = !intr || intr->object->target != light->target;
     if (occuluded) return {};
 
     float lightPdf = mesh.pdf(wlW, pos);

@@ -1,12 +1,11 @@
 #pragma once
 
+#include <cstddef>
 #include <limits>
-#include <memory>
 #include <optional>
-#include <vector>
 
+#include "Allocator.h"
 #include "Mesh.h"
-#include "Sampler.h"
 #include "SceneObject.h"
 
 struct Camera {
@@ -17,23 +16,13 @@ struct Camera {
 struct Intersection {
   Vec3f hit;
   Vec3f n;
-  std::shared_ptr<SceneObject> object;
+  SceneObject* object;
 };
 
 class Scene {
  public:
-  std::vector<std::shared_ptr<SceneObject>> objects;
-  std::vector<std::shared_ptr<LightObject>> lights;
+  Allocator allocator;
   Camera camera;
-
-  void add(std::shared_ptr<SceneObject> object) {
-    this->objects.push_back(object);
-  }
-
-  void add(std::shared_ptr<LightObject> light) {
-    this->objects.push_back(light);
-    this->lights.push_back(light);
-  }
 
   inline std::optional<Intersection> intersect(const Vec3f& origin,
                                                const Vec3f& dir) const {
@@ -42,9 +31,10 @@ class Scene {
     float t0 = MAX_DIST;
     Vec3f hit;
     Vec3f N;
-    std::shared_ptr<SceneObject> object;
+    SceneObject* object;
 
-    for (auto& obj : objects) {
+    for (size_t i = 0; i < allocator.objectsSize; i++) {
+      SceneObject* obj = allocator.objects[i];
       const Mesh& mesh = *obj->target;
       float tempDist = 0;
       Vec3f tempN;
@@ -61,10 +51,10 @@ class Scene {
     return {};
   }
 
-  std::shared_ptr<LightObject> sampleLight() const {
-    if (!lights.size()) return nullptr;
-    int idx =
-        std::min<int>(Sampler::Get1D() * lights.size(), lights.size() - 1);
-    return lights[idx];
+  LightObject* sampleLight() const {
+    if (allocator.lightsSize == 0) return nullptr;
+    int idx = std::min<int>(Sampler::Get1D() * allocator.lightsSize,
+                            allocator.lightsSize - 1);
+    return allocator.lights[idx];
   }
 };
