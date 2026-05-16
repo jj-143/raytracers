@@ -64,20 +64,20 @@ inline std::shared_ptr<Scene> CornellBoxPhong() {
   auto glass     = alloc.emplaceMaterial<PhongMaterial>(PhongMaterial{Vec3f( 0,  0,  0), {10, .01, .8}, 1500, 1.5});
   // clang-format on
 
-  alloc.emplaceObject<SceneObject>(sRed, red);
-  alloc.emplaceObject<SceneObject>(sGreen, green);
-  alloc.emplaceObject<SceneObject>(sYellow, yellow);
-  alloc.emplaceObject<SceneObject>(sMirror, mirror);
-  alloc.emplaceObject<SceneObject>(sGlass, glass);
-  alloc.emplaceObject<SceneObject>(floor, white);
-  alloc.emplaceObject<SceneObject>(ceiling, white);
-  alloc.emplaceObject<SceneObject>(wallLeft, red);
-  alloc.emplaceObject<SceneObject>(wallRight, green);
-  alloc.emplaceObject<SceneObject>(wallBack, white);
+  alloc.emplaceObject<BaseObject>(sRed, red);
+  alloc.emplaceObject<BaseObject>(sGreen, green);
+  alloc.emplaceObject<BaseObject>(sYellow, yellow);
+  alloc.emplaceObject<BaseObject>(sMirror, mirror);
+  alloc.emplaceObject<BaseObject>(sGlass, glass);
+  alloc.emplaceObject<BaseObject>(floor, white);
+  alloc.emplaceObject<BaseObject>(ceiling, white);
+  alloc.emplaceObject<BaseObject>(wallLeft, red);
+  alloc.emplaceObject<BaseObject>(wallRight, green);
+  alloc.emplaceObject<BaseObject>(wallBack, white);
 
   auto emission = alloc.emplaceMaterial<Emission>(Vec3f(1));
   auto pointLight = alloc.emplaceMesh<Sphere>(Vec3f(.275, .548, -.275), 0);
-  alloc.emplaceObject<LightObject>(pointLight, emission);
+  alloc.emplaceObject<Light>(pointLight, emission);
 
   return scene;
 }
@@ -112,17 +112,17 @@ inline std::shared_ptr<Scene> CornellBoxBSDF(float roughness = .2) {
   auto light     = alloc.emplaceMaterial<Emission>(Vec3f(25));
 
   // clang-format on
-  alloc.emplaceObject<SceneObject>(sRed, red);
-  alloc.emplaceObject<SceneObject>(sGreen, green);
-  alloc.emplaceObject<SceneObject>(sYellow, yellow);
-  alloc.emplaceObject<SceneObject>(sMirror, mirror);
-  alloc.emplaceObject<SceneObject>(sGlass, glass);
-  alloc.emplaceObject<SceneObject>(floor, white);
-  alloc.emplaceObject<SceneObject>(ceiling, white);
-  alloc.emplaceObject<SceneObject>(wallLeft, red);
-  alloc.emplaceObject<SceneObject>(wallRight, green);
-  alloc.emplaceObject<SceneObject>(wallBack, white);
-  alloc.emplaceObject<LightObject>(areaLight, light);
+  alloc.emplaceObject<BaseObject>(sRed, red);
+  alloc.emplaceObject<BaseObject>(sGreen, green);
+  alloc.emplaceObject<BaseObject>(sYellow, yellow);
+  alloc.emplaceObject<BaseObject>(sMirror, mirror);
+  alloc.emplaceObject<BaseObject>(sGlass, glass);
+  alloc.emplaceObject<BaseObject>(floor, white);
+  alloc.emplaceObject<BaseObject>(ceiling, white);
+  alloc.emplaceObject<BaseObject>(wallLeft, red);
+  alloc.emplaceObject<BaseObject>(wallRight, green);
+  alloc.emplaceObject<BaseObject>(wallBack, white);
+  alloc.emplaceObject<Light>(areaLight, light);
 
   return scene;
 }

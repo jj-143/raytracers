@@ -1,20 +1,27 @@
 #pragma once
 
+#include <variant>
+
 #include "Material.h"
 #include "Mesh.h"
 
+class BaseObject {};
+
+/**
+ * NOTE: Currently Light in WhittedRaytracer is considered as point light,
+ * and area light for others. No Light type implementations yet.
+ */
+class Light {};
+
 class SceneObject {
+  using ObjectType = std::variant<BaseObject, Light>;
+  ObjectType obj;
+
  public:
-  Mesh* target;
+  Mesh* mesh;
   Material* material;
 
   SceneObject() = default;
-  SceneObject(Mesh* m, Material* mat) : target(m), material(mat) {}
-};
-
-class LightObject : public SceneObject {
- public:
-  Mesh* mesh;
-
-  LightObject(Mesh* m, Emission* mat) : SceneObject(m, mat), mesh(m) {}
+  SceneObject(ObjectType obj, Mesh* mesh, Material* material)
+      : obj(obj), mesh(mesh), material(material) {}
 };

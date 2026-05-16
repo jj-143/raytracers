@@ -86,15 +86,15 @@ class WhittedRaytracer : public Tracer {
     Vec3f specColor;
 
     for (int i = 0; i < scene.allocator.lightsSize; ++i) {
-      LightObject* light = scene.allocator.lights[i];
-      Vec3f dirLight = (light->target->pos - hit).normalize();
+      SceneObject* light = scene.allocator.lights[i];
+      Vec3f dirLight = (light->mesh->pos - hit).normalize();
       float NoL = dot(n, dirLight);
 
       // Casting shadow ray
       Vec3f shadowOrigin = NoL < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
       if (auto intr = scene.intersect(shadowOrigin, dirLight)) {
         float dHit = (intr->hit - shadowOrigin).norm();
-        float dLight = (light->target->pos - shadowOrigin).norm();
+        float dLight = (light->mesh->pos - shadowOrigin).norm();
         if (dLight - dHit > 1e-3) {
           continue;
         }
@@ -258,7 +258,7 @@ class SimplePathtracer : public Tracer {
   struct LightSample {
     float pdf;
     Vec3f dir;
-    LightObject* light;
+    SceneObject* light;
   };
 
   std::optional<LightSample> sampleDirectLight(const Scene& scene,
@@ -270,7 +270,7 @@ class SimplePathtracer : public Tracer {
     Vec3f wlW = mesh.generate(pos);
 
     std::optional<Intersection> intr = scene.intersect(pos + wlW * 1e-3, wlW);
-    bool occuluded = !intr || intr->object->target != light->target;
+    bool occuluded = !intr || intr->object->mesh != light->mesh;
     if (occuluded) return {};
 
     float lightPdf = mesh.pdf(wlW, pos);

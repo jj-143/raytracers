@@ -35,7 +35,7 @@ class Scene {
 
     for (size_t i = 0; i < allocator.objectsSize; i++) {
       SceneObject* obj = allocator.objects[i];
-      const Mesh& mesh = *obj->target;
+      const Mesh& mesh = *obj->mesh;
       float tempDist = 0;
       Vec3f tempN;
       if (mesh.intersect(origin, dir, tempDist, tempN) && tempDist < t0) {
@@ -51,7 +51,7 @@ class Scene {
     return {};
   }
 
-  LightObject* sampleLight() const {
+  SceneObject* sampleLight() const {
     if (allocator.lightsSize == 0) return nullptr;
     int idx = std::min<int>(Sampler::Get1D() * allocator.lightsSize,
                             allocator.lightsSize - 1);

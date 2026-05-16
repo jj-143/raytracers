@@ -2,8 +2,9 @@
 
 #include <utility>
 
+#include "SceneObject.h"
+
 class Mesh;
-class SceneObject;
 class Material;
 class LightObject;
 
@@ -12,7 +13,7 @@ class Allocator {
   Mesh* meshes[128];
   Material* materials[128];
   SceneObject* objects[128];
-  LightObject* lights[128];
+  SceneObject* lights[128];
   int meshesSize = 0;
   int materialsSize = 0;
   int objectsSize = 0;
@@ -32,12 +33,12 @@ class Allocator {
     return ptr;
   }
 
-  template <typename T, typename... Args>
-  T* emplaceObject(Args&&... args) {
-    T* ptr = new T(std::forward<Args>(args)...);
+  template <typename T>
+  SceneObject* emplaceObject(Mesh* mesh, Material* material) {
+    SceneObject* ptr = new SceneObject(T(), mesh, material);
     objects[objectsSize++] = ptr;
 
-    if constexpr (std::is_same_v<T, LightObject>) {
+    if constexpr (std::is_same_v<T, Light>) {
       lights[lightsSize++] = ptr;
     }
 
