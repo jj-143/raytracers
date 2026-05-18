@@ -27,8 +27,8 @@ class Allocator {
   }
 
   template <typename T, typename... Args>
-  T* emplaceMaterial(Args&&... args) {
-    T* ptr = new T(std::forward<Args>(args)...);
+  Material* emplaceMaterial(Args&&... args) {
+    Material* ptr = new Material(T(std::forward<Args>(args)...));
     materials[materialsSize++] = ptr;
     return ptr;
   }

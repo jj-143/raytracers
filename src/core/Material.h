@@ -2,28 +2,14 @@
 
 #include <array>
 #include <optional>
+#include <variant>
 
 #include "Distribution.h"
 #include "Sampler.h"
 #include "common.h"
 #include "math.h"
 
-class Material {
- public:
-  Material() {}
-
-  virtual float E(const Vec3f& wo) const { return 0; }
-
-  virtual inline Vec3f f(const Ray& ro, const Ray& ri) { return 0; }
-
-  virtual Ray sampleRi(const Ray& ro) const { return {}; }
-
-  virtual std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) {
-    return {};
-  }
-};
-
-class PhongMaterial : public Material {
+class PhongMaterial {
  public:
   Vec3f albedo;
   std::array<float, 3> constants;  // k_specular, k_reflection, k_transmission
@@ -37,50 +23,51 @@ class PhongMaterial : public Material {
         constants(constants),
         specularExponent(specularExponent),
         refractiveIndex(refractiveIndex) {}
+
+  // Not used
+  Vec3f f(auto, auto) const { return {}; }
+  Ray sampleRi(auto) const { return {}; }
+  std::optional<BSDFSample> sample(auto, auto) const { return {}; }
 };
 
-class LambertBSDF : public Material {
+class LambertBSDF {
  public:
   Vec3f albedo;
   CosineDistribution dist;
 
   LambertBSDF(Vec3f albedo) : albedo(albedo) {}
 
-  inline Vec3f f(const Ray& ro, const Ray& ri) override {
-    return albedo / M_PI;
-  }
+  Vec3f f(const Ray& ro, const Ray& ri) const { return albedo / M_PI; }
 
-  Ray sampleRi(const Ray& ro) const override {
-    return {dist.sample(ro), Ray::Diffuse};
-  }
+  Ray sampleRi(const Ray& ro) const { return {dist.sample(ro), Ray::Diffuse}; }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
   }
 };
 
-class MetalBSDF : public Material {
+class MetalBSDF {
  public:
   Vec3f albedo;
 
   MetalBSDF(Vec3f albedo) : albedo(albedo) {}
 
-  inline Vec3f f(const Ray& ro, const Ray& ri) override {
+  Vec3f f(const Ray& ro, const Ray& ri) const {
     return IsSpecular(ri.flag) ? albedo : 0;
   }
 
-  Ray sampleRi(const Ray& ro) const override {
+  Ray sampleRi(const Ray& ro) const {
     Vec3f reflected;
     reflect(ro, reflected);
     return {DiracDeltaDistribution(reflected).sample(ro), Ray::Specular};
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     return BSDFSample(f(ro, ri), 0);
   }
 };
 
-class DielectricBSDF : public Material {
+class DielectricBSDF {
  public:
   float ior;  // Like in Blender, it's a relative value to surroundings.
   float R0;   // Reflectance at wi = 0
@@ -89,11 +76,11 @@ class DielectricBSDF : public Material {
     R0 = std::powf((ior - 1) / (ior + 1), 2);
   }
 
-  inline Vec3f f(const Ray& ro, const Ray& ri) override {
+  Vec3f f(const Ray& ro, const Ray& ri) const {
     return IsSpecular(ri.flag) ? 1 : 0;
   }
 
-  Ray sampleRi(const Ray& ro) const override {
+  Ray sampleRi(const Ray& ro) const {
     Ray ri;
     float VoH = ro.z;
     bool isInside = VoH < 0;
@@ -115,7 +102,7 @@ class DielectricBSDF : public Material {
         isTransmission ? Ray::SpecularTransmission : Ray::SpecularReflection};
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     return BSDFSample(f(ro, ri), 0);
   }
 };
@@ -135,7 +122,7 @@ class Microfacet {
  * Intended to be used in compsition; the transmissive distribution is not
  * defined.
  */
-class DielectricCoatBRDF : public Material {
+class DielectricCoatBRDF {
   float roughness;
   float alpha;
   float ior;  // see: `DielectricBSDF`
@@ -151,11 +138,9 @@ class DielectricCoatBRDF : public Material {
         R0(std::powf((ior - 1) / (ior + 1), 2)),
         dist(alpha) {}
 
-  inline float E(const Vec3f& wo) const override {
-    return FresnelSchlick(std::abs(wo.z), R0);
-  }
+  float E(const Vec3f& wo) const { return FresnelSchlick(std::abs(wo.z), R0); }
 
-  inline Vec3f f(const Ray& ro, const Ray& ri) override {
+  Vec3f f(const Ray& ro, const Ray& ri) const {
     if (IsSpecular(ri.flag)) return Vec3f(1);
 
     Vec3f wh = ro + ri;
@@ -168,7 +153,7 @@ class DielectricCoatBRDF : public Material {
     return F * D * G1_schlick / (4 * ri.z * ro.z);
   }
 
-  Ray sampleRi(const Ray& ro) const override {
+  Ray sampleRi(const Ray& ro) const {
     Ray ri;
     float VoH = ro.z;
     bool isInside = VoH < 0;
@@ -192,7 +177,7 @@ class DielectricCoatBRDF : public Material {
     return {dist.sample(ro), Ray::Reflection};
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     if (IsSpecular(ri.flag)) return BSDFSample(Vec3f(1), 0);
     if (ro.z < 1e-6) return {};  // Undefined for transmission
     return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
@@ -209,7 +194,7 @@ class DielectricCoatBRDF : public Material {
  * see: https://academysoftwarefoundation.github.io/OpenPBR/#formalism/layering
  */
 template <typename Coat, typename Substrate>
-class LayerBSDF : public Material {
+class LayerBSDF {
  public:
   Coat coat;
   Substrate substrate;
@@ -217,18 +202,18 @@ class LayerBSDF : public Material {
   LayerBSDF(Coat coat, Substrate substrate)
       : coat(coat), substrate(substrate) {}
 
-  inline Vec3f f(const Ray& ro, const Ray& ri) override {
+  Vec3f f(const Ray& ro, const Ray& ri) const {
     float ECoat = coat.E(ro);
     return coat.f(ro, ri) + (1 - ECoat) * substrate.f(ro, ri);
   }
 
-  Ray sampleRi(const Ray& ro) const override {
+  Ray sampleRi(const Ray& ro) const {
     Ray ri = coat.sampleRi(ro);
     if (IsReflection(ri.flag)) return ri;
     return IsReflection(ri.flag) ? ri : substrate.sampleRi(ro);
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     if (IsSpecular(ri.flag)) return coat.sample(ro, ri);
 
     float ECoat = coat.E(ro);
@@ -261,4 +246,31 @@ class GlossyDiffuseLambertBSDF
  public:
   GlossyDiffuseLambertBSDF(Vec3f albedo, float roughness, float ior)
       : LayerBSDF(DielectricCoatBRDF(roughness, ior), LambertBSDF(albedo)) {}
+};
+
+class Material {
+  using MaterialType = std::variant<PhongMaterial, LambertBSDF, MetalBSDF,
+                                    DielectricBSDF, GlossyDiffuseLambertBSDF>;
+  MaterialType mat;
+
+ public:
+  Material(MaterialType mat) : mat(mat) {}
+
+  Vec3f f(const Ray& ro, const Ray& ri) const {
+    return std::visit([ro, ri](auto&& mat) -> Vec3f { return mat.f(ro, ri); },
+                      mat);
+  }
+
+  Ray sampleRi(const Ray& ro) const {
+    return std::visit([ro](auto&& mat) -> Ray { return mat.sampleRi(ro); },
+                      mat);
+  }
+
+  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+    return std::visit(
+        [ro, ri](auto&& mat) -> std::optional<BSDFSample> {
+          return mat.sample(ro, ri);
+        },
+        mat);
+  }
 };
