@@ -121,21 +121,11 @@ class DielectricBSDF : public Material {
   }
 };
 
-class Microfacet : public Material {
+class Microfacet {
  public:
-  float roughness;
-  float alpha;
-  float ior;  // see: `DielectricBSDF`
-  float R0;   // Reflectance at wi = 0
+  static bool EffectivelySmooth(float roughness) { return roughness < 1e-3; }
 
-  Microfacet(float roughness, float ior) : roughness(roughness), ior(ior) {
-    alpha = roughnessToAlpha(roughness);
-    R0 = std::powf((ior - 1) / (ior + 1), 2);
-  }
-
-  inline bool effectivelySmooth() const { return roughness < 1e-3; }
-
-  virtual inline float roughnessToAlpha(float roughness) const {
+  static float RoughnessToAlpha(float roughness) {
     return std::powf(roughness, 2);
   }
 };
@@ -146,12 +136,21 @@ class Microfacet : public Material {
  * Intended to be used in compsition; the transmissive distribution is not
  * defined.
  */
-class DielectricCoatBRDF : public Microfacet {
+class DielectricCoatBRDF : public Material {
+  float roughness;
+  float alpha;
+  float ior;  // see: `DielectricBSDF`
+  float R0;   // Reflectance at wi = 0
+
  public:
   GGXDistribution dist;
 
   DielectricCoatBRDF(float roughness, float ior)
-      : Microfacet(roughness, ior), dist(alpha) {}
+      : roughness(roughness),
+        ior(ior),
+        alpha(Microfacet::RoughnessToAlpha(roughness)),
+        R0(std::powf((ior - 1) / (ior + 1), 2)),
+        dist(alpha) {}
 
   inline float E(const Vec3f& wo) const override {
     return FresnelSchlick(std::abs(wo.z), R0);
@@ -185,7 +184,7 @@ class DielectricCoatBRDF : public Microfacet {
     if (isTransmission) return {{}, Ray::Transmission};
 
     // Specular Reflection (perfectly smooth surface)
-    if (effectivelySmooth()) {
+    if (Microfacet::EffectivelySmooth(roughness)) {
       reflect(ro, ri);
       return {DiracDeltaDistribution(ri).sample(ro), Ray::SpecularReflection};
     }
