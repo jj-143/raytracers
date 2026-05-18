@@ -197,7 +197,7 @@ class SimplePathtracer : public Tracer {
 
   Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) override {
     int depth = 0;                 // trace depth
-    bool isSpecularBounce = true;  // initially true for direct Emission hit
+    bool isSpecularBounce = true;  // initially true for direct light hit
     Ray ro;                        // view ray "outgoing ray"
     Ray ri;                        // light ray "incoming ray"
     Vec3f woW(-dir);               // view vector, world space
