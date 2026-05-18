@@ -10,6 +10,7 @@ class Sphere {
   Vec3f pos;
   float radius;
 
+  Sphere() : pos({}), radius(0) {}
   Sphere(const Vec3f p, const float r) : pos(p), radius(r) {}
 
   inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
@@ -111,6 +112,7 @@ class Mesh {
   MeshVariant mesh;
 
  public:
+  Mesh() : mesh(Sphere()) {}
   Mesh(MeshVariant mesh) : mesh(mesh) {}
 
   Vec3f pos() const {

@@ -35,6 +35,7 @@ class LambertBSDF {
   Vec3f albedo;
   CosineDistribution dist;
 
+  LambertBSDF() {}
   LambertBSDF(Vec3f albedo) : albedo(albedo) {}
 
   Vec3f f(const Ray& ro, const Ray& ri) const { return albedo / M_PI; }
@@ -254,6 +255,7 @@ class Material {
   MaterialType mat;
 
  public:
+  Material() : mat(LambertBSDF()) {}
   Material(MaterialType mat) : mat(mat) {}
 
   Vec3f f(const Ray& ro, const Ray& ri) const {
