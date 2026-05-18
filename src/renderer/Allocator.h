@@ -33,9 +33,10 @@ class Allocator {
     return ptr;
   }
 
-  template <typename T>
-  SceneObject* emplaceObject(Mesh* mesh, Material* material) {
-    SceneObject* ptr = new SceneObject(T(), mesh, material);
+  template <typename T, typename... Args>
+  SceneObject* emplaceObject(Mesh* mesh, Material* material, Args&&... args) {
+    auto* ptr = new SceneObject(T(std::forward<Args>(args)...), mesh, material);
+
     objects[objectsSize++] = ptr;
 
     if constexpr (std::is_same_v<T, Light>) {
