@@ -11,10 +11,7 @@
 
 class Material {
  public:
-  Vec3f albedo;
-
   Material() {}
-  Material(Vec3f albedo) : albedo(albedo) {}
 
   virtual float E(const Vec3f& wo) const { return 0; }
 
@@ -29,6 +26,7 @@ class Material {
 
 class PhongMaterial : public Material {
  public:
+  Vec3f albedo;
   std::array<float, 3> constants;  // k_specular, k_reflection, k_transmission
   float specularExponent;
   float refractiveIndex;
@@ -36,7 +34,7 @@ class PhongMaterial : public Material {
   PhongMaterial(Vec3f albedo = Vec3f(1, 0, 0),
                 std::array<float, 3> constants = {0, 0, 0},
                 float specularExponent = 1, float refractiveIndex = 1)
-      : Material(albedo),
+      : albedo(albedo),
         constants(constants),
         specularExponent(specularExponent),
         refractiveIndex(refractiveIndex) {}
@@ -44,9 +42,10 @@ class PhongMaterial : public Material {
 
 class LambertBSDF : public Material {
  public:
+  Vec3f albedo;
   CosineDistribution dist;
 
-  LambertBSDF(Vec3f albedo) : Material(albedo) {}
+  LambertBSDF(Vec3f albedo) : albedo(albedo) {}
 
   inline Vec3f f(const Ray& ro, const Ray& ri) override {
     return albedo / M_PI;
@@ -63,7 +62,9 @@ class LambertBSDF : public Material {
 
 class MetalBSDF : public Material {
  public:
-  MetalBSDF(Vec3f albedo) : Material(albedo) {}
+  Vec3f albedo;
+
+  MetalBSDF(Vec3f albedo) : albedo(albedo) {}
 
   inline Vec3f f(const Ray& ro, const Ray& ri) override {
     return IsSpecular(ri.flag) ? albedo : 0;
@@ -85,7 +86,7 @@ class DielectricBSDF : public Material {
   float ior;  // Like in Blender, it's a relative value to surroundings.
   float R0;   // Reflectance at wi = 0
 
-  DielectricBSDF(float ior) : Material(Vec3f(1)), ior(ior) {
+  DielectricBSDF(float ior) : ior(ior) {
     R0 = std::powf((ior - 1) / (ior + 1), 2);
   }
 
@@ -127,8 +128,7 @@ class Microfacet : public Material {
   float ior;  // see: `DielectricBSDF`
   float R0;   // Reflectance at wi = 0
 
-  Microfacet(Vec3f albedo, float roughness, float ior)
-      : Material(albedo), roughness(roughness), ior(ior) {
+  Microfacet(float roughness, float ior) : roughness(roughness), ior(ior) {
     alpha = roughnessToAlpha(roughness);
     R0 = std::powf((ior - 1) / (ior + 1), 2);
   }
@@ -151,7 +151,7 @@ class DielectricCoatBRDF : public Microfacet {
   GGXDistribution dist;
 
   DielectricCoatBRDF(float roughness, float ior)
-      : Microfacet(Vec3f(1), roughness, ior), dist(alpha) {}
+      : Microfacet(roughness, ior), dist(alpha) {}
 
   inline float E(const Vec3f& wo) const override {
     return FresnelSchlick(std::abs(wo.z), R0);
