@@ -151,10 +151,9 @@ class RecursivePathtracer : public Tracer {
 
     if (intr->light) return ro.z > 0 ? intr->light->L() : 0;
 
-    DistributionSample ds = bsdf.sampleDistribution(ro);
+    ri = bsdf.sampleRi(ro);
 
-    if (IsSpecular(ds.flag)) {
-      ri = ds.sample(ro);
+    if (IsSpecular(ri.flag)) {
       std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
       if (!bs) return Vec3f(0);
       Vec3f wiW = onb.toWorldSpace(ri);
@@ -167,9 +166,8 @@ class RecursivePathtracer : public Tracer {
 
     if (isLightSampling && light) {
       wiW = light->mesh->generate(hit);
-      ri = onb.toLocalSpace(wiW);
+      ri = Ray(onb.toLocalSpace(wiW));
     } else {
-      ri = ds.sample(ro);
       wiW = onb.toWorldSpace(ri);
     }
 
@@ -234,9 +232,8 @@ class SimplePathtracer : public Tracer {
       }
 
       // BSDF
-      DistributionSample ds = bsdf.sampleDistribution(ro);
-      isSpecularBounce = IsSpecular(ds.flag);
-      ri = ds.sample(ro);
+      ri = bsdf.sampleRi(ro);
+      isSpecularBounce = IsSpecular(ri.flag);
 
       std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
       if (!bs) break;

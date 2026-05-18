@@ -21,7 +21,7 @@ class Material {
 
   virtual inline Vec3f f(const Ray& ro, const Ray& ri) { return 0; }
 
-  virtual DistributionSample sampleDistribution(const Ray& ro) { return {}; }
+  virtual Ray sampleRi(const Ray& ro) const { return {}; }
 
   virtual std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) {
     return {};
@@ -53,8 +53,8 @@ class LambertBSDF : public Material {
     return albedo / M_PI;
   }
 
-  DistributionSample sampleDistribution(const Ray& ro) override {
-    return DistributionSample(distrib, Ray::Diffuse);
+  Ray sampleRi(const Ray& ro) const override {
+    return {distrib->sample(ro), Ray::Diffuse};
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
@@ -70,11 +70,10 @@ class MetalBSDF : public Material {
     return IsSpecular(ri.flag) ? albedo : 0;
   }
 
-  DistributionSample sampleDistribution(const Ray& ro) override {
+  Ray sampleRi(const Ray& ro) const override {
     Vec3f reflected;
     reflect(ro, reflected);
-    return DistributionSample(
-        std::make_shared<DiracDeltaDistribution>(reflected), Ray::Specular);
+    return {DiracDeltaDistribution(reflected).sample(ro), Ray::Specular};
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
@@ -95,7 +94,7 @@ class DielectricBSDF : public Material {
     return IsSpecular(ri.flag) ? 1 : 0;
   }
 
-  DistributionSample sampleDistribution(const Ray& ro) override {
+  Ray sampleRi(const Ray& ro) const override {
     Ray ri;
     float VoH = ro.z;
     bool isInside = VoH < 0;
@@ -112,9 +111,9 @@ class DielectricBSDF : public Material {
       reflect(ro, ri);
     }
 
-    return DistributionSample(
-        std::make_shared<DiracDeltaDistribution>(ri),
-        isTransmission ? Ray::SpecularTransmission : Ray::SpecularReflection);
+    return {
+        DiracDeltaDistribution(ri).sample(ro),
+        isTransmission ? Ray::SpecularTransmission : Ray::SpecularReflection};
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
@@ -172,7 +171,7 @@ class DielectricCoatBRDF : public Microfacet {
     return F * D * G1_schlick / (4 * ri.z * ro.z);
   }
 
-  DistributionSample sampleDistribution(const Ray& ro) override {
+  Ray sampleRi(const Ray& ro) const override {
     Ray ri;
     float VoH = ro.z;
     bool isInside = VoH < 0;
@@ -184,17 +183,16 @@ class DielectricCoatBRDF : public Microfacet {
     bool isTransmission = isAllowedAngle && Sampler::Get1D() < (1 - R);
 
     // Transmission
-    if (isTransmission) return DistributionSample(Ray::Transmission);
+    if (isTransmission) return {{}, Ray::Transmission};
 
     // Specular Reflection (perfectly smooth surface)
     if (effectivelySmooth()) {
       reflect(ro, ri);
-      return DistributionSample(std::make_shared<DiracDeltaDistribution>(ri),
-                                Ray::SpecularReflection);
+      return {DiracDeltaDistribution(ri).sample(ro), Ray::SpecularReflection};
     }
 
     // Reflection (rough surface using microfacet)
-    return DistributionSample(distrib, Ray::Reflection);
+    return {distrib->sample(ro), Ray::Reflection};
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
@@ -227,9 +225,10 @@ class LayerBSDF : public Material {
     return coat->f(ro, ri) + (1 - ECoat) * substrate->f(ro, ri);
   }
 
-  DistributionSample sampleDistribution(const Ray& ro) override {
-    DistributionSample ds = coat->sampleDistribution(ro);
-    return IsReflection(ds.flag) ? ds : substrate->sampleDistribution(ro);
+  Ray sampleRi(const Ray& ro) const override {
+    Ray ri = coat->sampleRi(ro);
+    if (IsReflection(ri.flag)) return ri;
+    return IsReflection(ri.flag) ? ri : substrate->sampleRi(ro);
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {

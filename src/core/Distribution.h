@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Sampler.h"
-#include "common.h"
 #include "math.h"
 
 class Distribution {
@@ -9,23 +8,6 @@ class Distribution {
   virtual Vec3f sample(const Vec3f& wo) const { return Vec3f(1, 0, 0); }
   virtual float pdf(const Vec3f& wo, const Vec3f& wi) const { return 0; }
   virtual float ndf(const Vec3f& wh) const { return 1; }
-};
-
-class DistributionSample {
- public:
-  Ray::Flag flag;
-
-  DistributionSample() = default;
-  DistributionSample(Ray::Flag flag) : flag(flag) {}
-  DistributionSample(std::shared_ptr<Distribution> distrib, Ray::Flag flag)
-      : distrib(distrib), flag(flag) {}
-
-  inline Ray sample(const Vec3f& wo) const {
-    return Ray(distrib->sample(wo), flag);
-  }
-
- private:
-  std::shared_ptr<Distribution> distrib;
 };
 
 class CosineDistribution : public Distribution {
