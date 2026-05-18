@@ -36,7 +36,7 @@ class Scene {
     const SceneObject* object;
 
     for (size_t i = 0; i < allocator.objectsSize; i++) {
-      const SceneObject* obj = allocator.objects[i];
+      const SceneObject* obj = &allocator.objects[i];
       const Mesh& mesh = *obj->mesh;
       float tempDist = 0;
       Vec3f tempN;
