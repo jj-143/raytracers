@@ -39,7 +39,7 @@ class Allocator {
 
     objects[objectsSize++] = ptr;
 
-    if constexpr (std::is_same_v<T, Light>) {
+    if constexpr (std::is_same_v<T, BaseLight>) {
       lights[lightsSize++] = ptr;
     }
 

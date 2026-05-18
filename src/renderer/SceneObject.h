@@ -8,13 +8,19 @@
 class BaseObject {};
 
 /**
- * NOTE: Currently Light in WhittedRaytracer is considered as point light,
- * and area light for others. No Light type implementations yet.
+ * BaseLight is just default light implementations acts as point light in
+ * WhittedRaytracer, and area light in others.
  */
-class Light {};
+class BaseLight {
+ public:
+  Vec3f color;
+  float power;
+
+  BaseLight(Vec3f color, float power) : color(color), power(power) {}
+};
 
 class SceneObject {
-  using ObjectType = std::variant<BaseObject, Light>;
+  using ObjectType = std::variant<BaseObject, BaseLight>;
   ObjectType obj;
 
  public:

@@ -77,7 +77,7 @@ inline std::shared_ptr<Scene> CornellBoxPhong() {
 
   auto emission = alloc.emplaceMaterial<Emission>(Vec3f(1));
   auto pointLight = alloc.emplaceMesh<Sphere>(Vec3f(.275, .548, -.275), 0);
-  alloc.emplaceObject<Light>(pointLight, emission);
+  alloc.emplaceObject<BaseLight>(pointLight, emission, Vec3f{1}, 1.0f);
 
   return scene;
 }
@@ -122,7 +122,7 @@ inline std::shared_ptr<Scene> CornellBoxBSDF(float roughness = .2) {
   alloc.emplaceObject<BaseObject>(wallLeft, red);
   alloc.emplaceObject<BaseObject>(wallRight, green);
   alloc.emplaceObject<BaseObject>(wallBack, white);
-  alloc.emplaceObject<Light>(areaLight, light);
+  alloc.emplaceObject<BaseLight>(areaLight, light, Vec3f{1}, 25.0f);
 
   return scene;
 }
