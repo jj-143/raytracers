@@ -24,4 +24,9 @@ class SceneObject {
   SceneObject() = default;
   SceneObject(ObjectType obj, Mesh* mesh, Material* material)
       : obj(obj), mesh(mesh), material(material) {}
+
+  template <typename Visitor>
+  decltype(auto) visit(Visitor&& visitor) {
+    return std::visit(std::forward<Visitor>(visitor), obj);
+  }
 };
