@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <memory>
 #include <optional>
 
 #include "Distribution.h"
@@ -212,32 +211,32 @@ class DielectricCoatBRDF : public Material {
 template <typename Coat, typename Substrate>
 class LayerBSDF : public Material {
  public:
-  std::unique_ptr<Coat> coat;
-  std::unique_ptr<Substrate> substrate;
+  Coat coat;
+  Substrate substrate;
 
-  LayerBSDF(std::unique_ptr<Coat> coat, std::unique_ptr<Substrate> substrate)
-      : coat(std::move(coat)), substrate(std::move(substrate)) {}
+  LayerBSDF(Coat coat, Substrate substrate)
+      : coat(coat), substrate(substrate) {}
 
   inline Vec3f f(const Ray& ro, const Ray& ri) override {
-    float ECoat = coat->E(ro);
-    return coat->f(ro, ri) + (1 - ECoat) * substrate->f(ro, ri);
+    float ECoat = coat.E(ro);
+    return coat.f(ro, ri) + (1 - ECoat) * substrate.f(ro, ri);
   }
 
   Ray sampleRi(const Ray& ro) const override {
-    Ray ri = coat->sampleRi(ro);
+    Ray ri = coat.sampleRi(ro);
     if (IsReflection(ri.flag)) return ri;
-    return IsReflection(ri.flag) ? ri : substrate->sampleRi(ro);
+    return IsReflection(ri.flag) ? ri : substrate.sampleRi(ro);
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
-    if (IsSpecular(ri.flag)) return coat->sample(ro, ri);
+    if (IsSpecular(ri.flag)) return coat.sample(ro, ri);
 
-    float ECoat = coat->E(ro);
+    float ECoat = coat.E(ro);
     float ESubstrate = 1 - ECoat;
 
-    Vec3f fValue = coat->f(ro, ri) + substrate->f(ro, ri) * ESubstrate;
-    float pdf = coat->dist.pdf(ro, ri) * ECoat +
-                substrate->dist.pdf(ro, ri) * ESubstrate;
+    Vec3f fValue = coat.f(ro, ri) + substrate.f(ro, ri) * ESubstrate;
+    float pdf =
+        coat.dist.pdf(ro, ri) * ECoat + substrate.dist.pdf(ro, ri) * ESubstrate;
     return BSDFSample(fValue, pdf);
   }
 };
@@ -261,6 +260,5 @@ class GlossyDiffuseLambertBSDF
     : public LayerBSDF<DielectricCoatBRDF, LambertBSDF> {
  public:
   GlossyDiffuseLambertBSDF(Vec3f albedo, float roughness, float ior)
-      : LayerBSDF(std::make_unique<DielectricCoatBRDF>(roughness, ior),
-                  std::make_unique<LambertBSDF>(albedo)) {}
+      : LayerBSDF(DielectricCoatBRDF(roughness, ior), LambertBSDF(albedo)) {}
 };
