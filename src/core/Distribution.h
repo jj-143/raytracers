@@ -3,16 +3,9 @@
 #include "Sampler.h"
 #include "math.h"
 
-class Distribution {
+class CosineDistribution {
  public:
-  virtual Vec3f sample(const Vec3f& wo) const { return Vec3f(1, 0, 0); }
-  virtual float pdf(const Vec3f& wo, const Vec3f& wi) const { return 0; }
-  virtual float ndf(const Vec3f& wh) const { return 1; }
-};
-
-class CosineDistribution : public Distribution {
- public:
-  Vec3f sample(const Vec3f& wo) const override {
+  Vec3f sample(const Vec3f& wo) const {
     Vec2f u = Sampler::Get2D();
 
     float phi = 2 * M_PI * u.x;
@@ -25,34 +18,35 @@ class CosineDistribution : public Distribution {
     return wi;
   }
 
-  float pdf(const Vec3f& wo, const Vec3f& wi) const override {
+  float pdf(const Vec3f& wo, const Vec3f& wi) const {
     return std::fmax(0.f, wi.z / M_PI);
   }
 };
 
-class DiracDeltaDistribution : public Distribution {
+class DiracDeltaDistribution {
  public:
   DiracDeltaDistribution(Vec3f w) : w(w) {}
-  Vec3f sample(const Vec3f& wo) const override { return w; }
-  float pdf(const Vec3f& wo, const Vec3f& wi) const override { return 0; }
+
+  Vec3f sample(const Vec3f& wo) const { return w; }
+  float pdf(const Vec3f& wo, const Vec3f& wi) const { return 0; }
 
  private:
   Vec3f w;
 };
 
 /* Trowbridge–Reitz (GGX) distribution model (isotropic) */
-class GGXDistribution : public Distribution {
+class GGXDistribution {
  public:
   GGXDistribution(float alpha) : alpha(alpha) {}
 
-  Vec3f sample(const Vec3f& wo) const override {
+  Vec3f sample(const Vec3f& wo) const {
     Vec3f wh = sampleWh(wo);
     Vec3f wi = -wo + 2 * wh * dot(wo, wh);
     if (wo.z < 0) wi.z *= -1;
     return wi;
   }
 
-  float pdf(const Vec3f& wo, const Vec3f& wi) const override {
+  float pdf(const Vec3f& wo, const Vec3f& wi) const {
     Vec3f wh = (wi + wo).normalize();
     float absCosTheta = std::fabs(wh.z);
     float DValue = ndf(wh);
@@ -60,7 +54,7 @@ class GGXDistribution : public Distribution {
     return pdfWh / (4 * dot(wo, wh));
   }
 
-  float ndf(const Vec3f& wh) const override {
+  float ndf(const Vec3f& wh) const {
     return alpha * alpha /
            (M_PI * (std::powf((wh.z * wh.z * (alpha * alpha - 1) + 1), 2)));
   }
