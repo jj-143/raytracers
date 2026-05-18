@@ -9,16 +9,13 @@
 #include "common.h"
 #include "math.h"
 
-enum class MaterialType { BSDF, Emission, Phong };
-
 class Material {
  public:
-  MaterialType type;
   Vec3f albedo;
   std::shared_ptr<Distribution> distrib;
 
-  Material(MaterialType type) : type(type) {}
-  Material(MaterialType type, Vec3f albedo) : type(type), albedo(albedo) {}
+  Material() {}
+  Material(Vec3f albedo) : albedo(albedo) {}
 
   virtual float E(const Vec3f& wo) const { return 0; }
 
@@ -33,8 +30,7 @@ class Material {
 
 class Emission : public Material {
  public:
-  Emission(Vec3f color, float strength = 1)
-      : Material(MaterialType::Emission, color * strength) {}
+  Emission(Vec3f color, float strength = 1) : Material(color * strength) {}
 };
 
 class PhongMaterial : public Material {
@@ -46,7 +42,7 @@ class PhongMaterial : public Material {
   PhongMaterial(Vec3f albedo = Vec3f(1, 0, 0),
                 std::array<float, 3> constants = {0, 0, 0},
                 float specularExponent = 1, float refractiveIndex = 1)
-      : Material(MaterialType::Phong, albedo),
+      : Material(albedo),
         constants(constants),
         specularExponent(specularExponent),
         refractiveIndex(refractiveIndex) {}
@@ -54,7 +50,7 @@ class PhongMaterial : public Material {
 
 class LambertBSDF : public Material {
  public:
-  LambertBSDF(Vec3f albedo) : Material(MaterialType::BSDF, albedo) {
+  LambertBSDF(Vec3f albedo) : Material(albedo) {
     distrib = std::make_shared<CosineDistribution>();
   }
 
@@ -73,7 +69,7 @@ class LambertBSDF : public Material {
 
 class MetalBSDF : public Material {
  public:
-  MetalBSDF(Vec3f albedo) : Material(MaterialType::BSDF, albedo) {}
+  MetalBSDF(Vec3f albedo) : Material(albedo) {}
 
   inline Vec3f f(const Ray& ro, const Ray& ri) override {
     return IsSpecular(ri.flag) ? albedo : 0;
@@ -96,7 +92,7 @@ class DielectricBSDF : public Material {
   float ior;  // Like in Blender, it's a relative value to surroundings.
   float R0;   // Reflectance at wi = 0
 
-  DielectricBSDF(float ior) : Material(MaterialType::BSDF, Vec3f(1)), ior(ior) {
+  DielectricBSDF(float ior) : Material(Vec3f(1)), ior(ior) {
     R0 = std::powf((ior - 1) / (ior + 1), 2);
   }
 
@@ -139,7 +135,7 @@ class Microfacet : public Material {
   float R0;   // Reflectance at wi = 0
 
   Microfacet(Vec3f albedo, float roughness, float ior)
-      : Material(MaterialType::BSDF, albedo), roughness(roughness), ior(ior) {
+      : Material(albedo), roughness(roughness), ior(ior) {
     alpha = roughnessToAlpha(roughness);
     R0 = std::powf((ior - 1) / (ior + 1), 2);
   }
@@ -229,9 +225,7 @@ class LayerBSDF : public Material {
   std::unique_ptr<Material> substrate;
 
   LayerBSDF(std::unique_ptr<Coat> coat, std::unique_ptr<Substrate> substrate)
-      : Material(MaterialType::BSDF),
-        coat(std::move(coat)),
-        substrate(std::move(substrate)) {}
+      : coat(std::move(coat)), substrate(std::move(substrate)) {}
 
   inline Vec3f f(const Ray& ro, const Ray& ri) override {
     float ECoat = coat->E(ro);
