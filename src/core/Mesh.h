@@ -14,6 +14,8 @@ class Sphere {
 
   inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
                         Vec3f& N) const {
+    if (radius < 1e-6) return false;
+
     Vec3f L = (pos - orig);
     float tca = dot(L, dir);
     float d2 = dot(L, L) - tca * tca;
