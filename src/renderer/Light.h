@@ -10,7 +10,7 @@ concept Emitter = requires(T t) {
   { t.L() } -> std::same_as<Vec3f>;
 };
 
-bool constexpr IsLight(SceneObject* obj) {
+bool constexpr IsLight(const SceneObject* obj) {
   if (!obj) return false;
   return obj->visit(overloaded{
       [](Emitter auto&&) { return true; },
@@ -21,7 +21,7 @@ bool constexpr IsLight(SceneObject* obj) {
 // Light interface to use with SceneObject
 class Light {
  public:
-  Light(SceneObject* obj) : obj(obj) {}
+  Light(const SceneObject* obj) : obj(obj) {}
 
   Vec3f L() {
     return obj->visit(overloaded{
@@ -31,5 +31,5 @@ class Light {
   }
 
  private:
-  SceneObject* obj;
+  const SceneObject* obj;
 };

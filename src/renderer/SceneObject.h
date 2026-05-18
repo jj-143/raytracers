@@ -37,4 +37,9 @@ class SceneObject {
   decltype(auto) visit(Visitor&& visitor) {
     return std::visit(std::forward<Visitor>(visitor), obj);
   }
+
+  template <typename Visitor>
+  decltype(auto) visit(Visitor&& visitor) const {
+    return std::visit(std::forward<Visitor>(visitor), obj);
+  }
 };

@@ -17,7 +17,7 @@ struct Camera {
 struct Intersection {
   Vec3f hit;
   Vec3f n;
-  SceneObject* object;
+  const SceneObject* object;
   std::optional<Light> light;
 };
 
@@ -33,10 +33,10 @@ class Scene {
     float t0 = MAX_DIST;
     Vec3f hit;
     Vec3f N;
-    SceneObject* object;
+    const SceneObject* object;
 
     for (size_t i = 0; i < allocator.objectsSize; i++) {
-      SceneObject* obj = allocator.objects[i];
+      const SceneObject* obj = allocator.objects[i];
       const Mesh& mesh = *obj->mesh;
       float tempDist = 0;
       Vec3f tempN;
@@ -59,7 +59,7 @@ class Scene {
     return {};
   }
 
-  SceneObject* sampleLight() const {
+  const SceneObject* sampleLight() const {
     if (allocator.lightsSize == 0) return nullptr;
     int idx = std::min<int>(Sampler::Get1D() * allocator.lightsSize,
                             allocator.lightsSize - 1);
