@@ -12,7 +12,6 @@
 class Material {
  public:
   Vec3f albedo;
-  std::shared_ptr<Distribution> distrib;
 
   Material() {}
   Material(Vec3f albedo) : albedo(albedo) {}
@@ -45,20 +44,20 @@ class PhongMaterial : public Material {
 
 class LambertBSDF : public Material {
  public:
-  LambertBSDF(Vec3f albedo) : Material(albedo) {
-    distrib = std::make_shared<CosineDistribution>();
-  }
+  CosineDistribution dist;
+
+  LambertBSDF(Vec3f albedo) : Material(albedo) {}
 
   inline Vec3f f(const Ray& ro, const Ray& ri) override {
     return albedo / M_PI;
   }
 
   Ray sampleRi(const Ray& ro) const override {
-    return {distrib->sample(ro), Ray::Diffuse};
+    return {dist.sample(ro), Ray::Diffuse};
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
-    return BSDFSample(f(ro, ri), distrib->pdf(ro, ri));
+    return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
   }
 };
 
@@ -149,10 +148,10 @@ class Microfacet : public Material {
  */
 class DielectricCoatBRDF : public Microfacet {
  public:
+  GGXDistribution dist;
+
   DielectricCoatBRDF(float roughness, float ior)
-      : Microfacet(Vec3f(1), roughness, ior) {
-    distrib = std::make_shared<GGXDistribution>(alpha);
-  }
+      : Microfacet(Vec3f(1), roughness, ior), dist(alpha) {}
 
   inline float E(const Vec3f& wo) const override {
     return FresnelSchlick(std::abs(wo.z), R0);
@@ -167,7 +166,7 @@ class DielectricCoatBRDF : public Microfacet {
 
     float F = FresnelSchlick(dot(ro, wh), R0);
     float G1_schlick = ro.z / (ro.z * (1 - alpha / 2) + alpha / 2);
-    float D = distrib->ndf(wh);
+    float D = dist.ndf(wh);
     return F * D * G1_schlick / (4 * ri.z * ro.z);
   }
 
@@ -192,13 +191,13 @@ class DielectricCoatBRDF : public Microfacet {
     }
 
     // Reflection (rough surface using microfacet)
-    return {distrib->sample(ro), Ray::Reflection};
+    return {dist.sample(ro), Ray::Reflection};
   }
 
   std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) override {
     if (IsSpecular(ri.flag)) return BSDFSample(Vec3f(1), 0);
     if (ro.z < 1e-6) return {};  // Undefined for transmission
-    return BSDFSample(f(ro, ri), distrib->pdf(ro, ri));
+    return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
   }
 };
 
@@ -214,8 +213,8 @@ class DielectricCoatBRDF : public Microfacet {
 template <typename Coat, typename Substrate>
 class LayerBSDF : public Material {
  public:
-  std::unique_ptr<Material> coat;
-  std::unique_ptr<Material> substrate;
+  std::unique_ptr<Coat> coat;
+  std::unique_ptr<Substrate> substrate;
 
   LayerBSDF(std::unique_ptr<Coat> coat, std::unique_ptr<Substrate> substrate)
       : coat(std::move(coat)), substrate(std::move(substrate)) {}
@@ -238,8 +237,8 @@ class LayerBSDF : public Material {
     float ESubstrate = 1 - ECoat;
 
     Vec3f fValue = coat->f(ro, ri) + substrate->f(ro, ri) * ESubstrate;
-    float pdf = coat->distrib->pdf(ro, ri) * ECoat +
-                substrate->distrib->pdf(ro, ri) * ESubstrate;
+    float pdf = coat->dist.pdf(ro, ri) * ECoat +
+                substrate->dist.pdf(ro, ri) * ESubstrate;
     return BSDFSample(fValue, pdf);
   }
 };
