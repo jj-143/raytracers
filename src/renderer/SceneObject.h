@@ -17,6 +17,8 @@ class BaseLight {
   float power;
 
   BaseLight(Vec3f color, float power) : color(color), power(power) {}
+
+  Vec3f L() const { return color * power; }
 };
 
 class SceneObject {

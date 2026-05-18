@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "Allocator.h"
+#include "Light.h"
 #include "Mesh.h"
 #include "SceneObject.h"
 
@@ -17,6 +18,7 @@ struct Intersection {
   Vec3f hit;
   Vec3f n;
   SceneObject* object;
+  std::optional<Light> light;
 };
 
 class Scene {
@@ -46,7 +48,13 @@ class Scene {
       }
     }
     if (t0 < MAX_DIST) {
-      return Intersection{.hit = hit, .n = N, .object = object};
+      return Intersection{
+          .hit = hit,
+          .n = N,
+          .object = object,
+          .light =
+              IsLight(object) ? std::optional<Light>(object) : std::nullopt,
+      };
     }
     return {};
   }

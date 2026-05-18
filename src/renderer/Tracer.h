@@ -100,11 +100,13 @@ class WhittedRaytracer : public Tracer {
         }
       }
 
-      diffColor = diffColor + std::max(0.f, NoL) * light->material->albedo;
+      Vec3f L = Light(light).L();
+
+      diffColor = diffColor + std::max(0.f, NoL) * L;
 
       specColor = specColor + powf(std::max(0.f, dot(reflectionDir, dirLight)),
                                    material.specularExponent) *
-                                  light->material->albedo;
+                                  L;
     }
 
     color = material.albedo * diffColor + material.constants[0] * specColor +
@@ -147,7 +149,7 @@ class RecursivePathtracer : public Tracer {
     Ray ri;                           // light ray "incoming ray"
     Vec3f wiW;                        // light ray, world space
 
-    if (bsdf.type == MaterialType::Emission) return ro.z > 0 ? bsdf.albedo : 0;
+    if (intr->light) return ro.z > 0 ? intr->light->L() : 0;
 
     DistributionSample ds = bsdf.sampleDistribution(ro);
 
@@ -213,9 +215,9 @@ class SimplePathtracer : public Tracer {
       ONB onb = ONB(intr->n);
       ro = onb.toLocalSpace(woW);
 
-      if (bsdf.type == MaterialType::Emission) {
+      if (intr->light) {
         if (isSpecularBounce && ro.z > 0) {
-          Lo += beta * bsdf.albedo;
+          Lo += beta * intr->light->L();
         }
         // Skip this hit
         orig = hit - woW * 1e-3;
@@ -226,8 +228,8 @@ class SimplePathtracer : public Tracer {
       if (std::optional<LightSample> ls = sampleDirectLight(scene, hit)) {
         Vec3f wl = onb.toLocalSpace(ls->dir);
         if (wl.z > 0) {
-          Lo += beta * ls->light->material->albedo * bsdf.f(ro, wl) *
-                std::abs(wl.z) / ls->pdf;
+          Lo += beta * Light(ls->light).L() * bsdf.f(ro, wl) * std::abs(wl.z) /
+                ls->pdf;
         }
       }
 
