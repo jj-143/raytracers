@@ -7,7 +7,9 @@
 #include "Allocator.h"
 #include "Light.h"
 #include "Mesh.h"
-#include "SceneObject.h"
+#include "math.h"
+
+class SceneObject;
 
 struct Camera {
   Vec3f pos;
@@ -37,10 +39,10 @@ class Scene {
 
     for (size_t i = 0; i < allocator.objectsSize; i++) {
       const SceneObject* obj = &allocator.objects[i];
-      const Mesh& mesh = *obj->mesh;
+      const Mesh* mesh = allocator.getMesh(obj);
       float tempDist = 0;
       Vec3f tempN;
-      if (mesh.intersect(origin, dir, tempDist, tempN) && tempDist < t0) {
+      if (mesh->intersect(origin, dir, tempDist, tempN) && tempDist < t0) {
         t0 = tempDist;
         N = tempN;
         hit = dir * t0 + origin;
@@ -63,6 +65,6 @@ class Scene {
     if (allocator.lightsSize == 0) return nullptr;
     int idx = std::min<int>(Sampler::Get1D() * allocator.lightsSize,
                             allocator.lightsSize - 1);
-    return allocator.lights[idx];
+    return &allocator.objects[allocator.lights[idx]];
   }
 };

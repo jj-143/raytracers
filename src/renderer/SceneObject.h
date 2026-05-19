@@ -2,8 +2,7 @@
 
 #include <variant>
 
-#include "Material.h"
-#include "Mesh.h"
+#include "math.h"
 
 class BaseObject {};
 
@@ -26,12 +25,13 @@ class SceneObject {
   ObjectType obj;
 
  public:
-  Mesh* mesh;
-  Material* material;
+  int meshId;
+  int materialId;
 
   SceneObject() = default;
-  SceneObject(ObjectType obj, Mesh* mesh, Material* material)
-      : obj(obj), mesh(mesh), material(material) {}
+
+  SceneObject(ObjectType obj, int meshId, int materialId)
+      : obj(obj), meshId(meshId), materialId(materialId) {}
 
   template <typename Visitor>
   decltype(auto) visit(Visitor&& visitor) {

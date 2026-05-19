@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include "Allocator.h"
 #include "Material.h"
 #include "Sampler.h"
 #include "Scene.h"
@@ -46,12 +47,15 @@ class WhittedRaytracer : public Tracer {
       return false;
     };
 
+    const Allocator& alloc = scene.allocator;
+
     std::optional<Intersection> intr = scene.intersect(orig, dir);
     if (!intr) return false;
 
     Vec3f& hit = intr->hit;
     Vec3f& n = intr->n;
-    PhongMaterial& material = *(PhongMaterial*)(intr->object->material);
+    PhongMaterial& material =
+        *(PhongMaterial*)(alloc.getMaterial(intr->object));
 
     // Casting reflection ray
     Vec3f reflectionColor = Vec3f(0, 0, 0);
@@ -85,16 +89,17 @@ class WhittedRaytracer : public Tracer {
     Vec3f diffColor;
     Vec3f specColor;
 
-    for (int i = 0; i < scene.allocator.lightsSize; ++i) {
-      SceneObject* light = scene.allocator.lights[i];
-      Vec3f dirLight = (light->mesh->pos() - hit).normalize();
+    for (int i = 0; i < alloc.lightsSize; ++i) {
+      const SceneObject* light = &alloc.objects[alloc.lights[i]];
+      const Mesh* lightMesh = alloc.getMesh(light);
+      Vec3f dirLight = (lightMesh->pos() - hit).normalize();
       float NoL = dot(n, dirLight);
 
       // Casting shadow ray
       Vec3f shadowOrigin = NoL < 0 ? hit - n * 1e-3 : hit + n * 1e-3;
       if (auto intr = scene.intersect(shadowOrigin, dirLight)) {
         float dHit = (intr->hit - shadowOrigin).norm();
-        float dLight = (light->mesh->pos() - shadowOrigin).norm();
+        float dLight = (lightMesh->pos() - shadowOrigin).norm();
         if (dLight - dHit > 1e-3) {
           continue;
         }
@@ -139,11 +144,13 @@ class RecursivePathtracer : public Tracer {
                   int depth = 0) {
     if (depth > maxDepth) return Vec3f(0);
 
+    const Allocator& alloc = scene.allocator;
+
     std::optional<Intersection> intr = scene.intersect(orig, dir);
     if (!intr) return Vec3f(0);
 
     Vec3f& hit = intr->hit;
-    Material& bsdf = *intr->object->material;
+    const Material& bsdf = *alloc.getMaterial(intr->object);
     ONB onb = ONB(intr->n);           // orthonormal basis with surface normal
     Ray ro = onb.toLocalSpace(-dir);  // view ray "outgoing ray"
     Ray ri;                           // light ray "incoming ray"
@@ -165,7 +172,7 @@ class RecursivePathtracer : public Tracer {
     const auto& light = scene.sampleLight();
 
     if (isLightSampling && light) {
-      wiW = light->mesh->generate(hit);
+      wiW = alloc.getMesh(light)->generate(hit);
       ri = Ray(onb.toLocalSpace(wiW));
     } else {
       wiW = onb.toWorldSpace(ri);
@@ -176,7 +183,7 @@ class RecursivePathtracer : public Tracer {
     float NoL = ri.z;
     if (NoL < 0) return Vec3f(0);
 
-    float lightPdf = light ? light->mesh->pdf(wiW, hit) : 0;
+    float lightPdf = light ? alloc.getMesh(light)->pdf(wiW, hit) : 0;
     float pdf = (lightPdf + bs->pdf) / 2;
     if (pdf < 1e-6) return Vec3f(0);
 
@@ -209,7 +216,7 @@ class SimplePathtracer : public Tracer {
       if (!intr) break;
 
       Vec3f& hit = intr->hit;
-      Material& bsdf = *intr->object->material;
+      const Material& bsdf = *scene.allocator.getMaterial(intr->object);
       ONB onb = ONB(intr->n);
       ro = onb.toLocalSpace(woW);
 
@@ -257,22 +264,24 @@ class SimplePathtracer : public Tracer {
   struct LightSample {
     float pdf;
     Vec3f dir;
-    SceneObject* light;
+    const SceneObject* light;
   };
 
   std::optional<LightSample> sampleDirectLight(const Scene& scene,
                                                const Vec3f& pos) const {
-    const auto& light = scene.sampleLight();
+    const SceneObject* light = scene.sampleLight();
     if (!light) return {};
 
-    auto& mesh = *light->mesh;
-    Vec3f wlW = mesh.generate(pos);
+    const Allocator& alloc = scene.allocator;
+
+    const Mesh* mesh = alloc.getMesh(light);
+    Vec3f wlW = mesh->generate(pos);
 
     std::optional<Intersection> intr = scene.intersect(pos + wlW * 1e-3, wlW);
-    bool occuluded = !intr || intr->object->mesh != light->mesh;
+    bool occuluded = !intr || intr->object != light;
     if (occuluded) return {};
 
-    float lightPdf = mesh.pdf(wlW, pos);
+    float lightPdf = mesh->pdf(wlW, pos);
     if (lightPdf < 1e-6) return {};
 
     return LightSample{.pdf = lightPdf, .dir = wlW, .light = light};

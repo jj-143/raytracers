@@ -2,7 +2,6 @@
 
 #include <utility>
 
-#include "Light.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "SceneObject.h"
@@ -14,33 +13,47 @@ class Allocator {
   Mesh meshes[128];
   Material materials[128];
   SceneObject objects[128];
-  SceneObject* lights[128];
+  int lights[128];
+
+  int meshIndex[128];
+  int materialIndex[128];
+
   int meshesSize = 0;
   int materialsSize = 0;
   int objectsSize = 0;
   int lightsSize = 0;
 
+  const Material* getMaterial(const SceneObject* obj) const {
+    return &materials[obj->materialId];
+  }
+
+  const Mesh* getMesh(const SceneObject* obj) const {
+    return &meshes[obj->meshId];
+  }
+
   template <typename T, typename... Args>
-  Mesh* emplaceMesh(Args&&... args) {
+  int emplaceMesh(Args&&... args) {
     meshes[meshesSize] = {T(std::forward<Args>(args)...)};
-    return &meshes[meshesSize++];
+    return meshesSize++;
   }
 
   template <typename T, typename... Args>
-  Material* emplaceMaterial(Args&&... args) {
+  int emplaceMaterial(Args&&... args) {
     materials[materialsSize] = {T(std::forward<Args>(args)...)};
-    return &materials[materialsSize++];
+    return materialsSize++;
   }
 
   template <typename T, typename... Args>
-  SceneObject* emplaceObject(Mesh* mesh, Material* material, Args&&... args) {
-    objects[objectsSize] = {T(std::forward<Args>(args)...), mesh, material};
-    SceneObject* ptr = &objects[objectsSize++];
+  SceneObject* emplaceObject(int meshId, int materialId, Args&&... args) {
+    meshIndex[objectsSize] = meshId;
+    materialIndex[objectsSize] = materialId;
+
+    objects[objectsSize] = {T(std::forward<Args>(args)...), meshId, materialId};
 
     if constexpr (std::is_same_v<T, BaseLight>) {
-      lights[lightsSize++] = ptr;
+      lights[lightsSize++] = objectsSize;
     }
 
-    return ptr;
+    return &objects[objectsSize++];
   }
 };
