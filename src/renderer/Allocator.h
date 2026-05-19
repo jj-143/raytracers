@@ -33,13 +33,14 @@ class Allocator {
 
   template <typename T, typename... Args>
   int emplaceMesh(Args&&... args) {
-    meshes[meshesSize] = {T(std::forward<Args>(args)...)};
+    std::construct_at(&meshes[meshesSize], T(std::forward<Args>(args)...));
     return meshesSize++;
   }
 
   template <typename T, typename... Args>
   int emplaceMaterial(Args&&... args) {
-    materials[materialsSize] = {T(std::forward<Args>(args)...)};
+    std::construct_at(&materials[materialsSize],
+                      T(std::forward<Args>(args)...));
     return materialsSize++;
   }
 
@@ -48,7 +49,8 @@ class Allocator {
     meshIndex[objectsSize] = meshId;
     materialIndex[objectsSize] = materialId;
 
-    objects[objectsSize] = {T(std::forward<Args>(args)...), meshId, materialId};
+    std::construct_at(&objects[objectsSize], T(std::forward<Args>(args)...),
+                      meshId, materialId);
 
     if constexpr (std::is_same_v<T, BaseLight>) {
       lights[lightsSize++] = objectsSize;
