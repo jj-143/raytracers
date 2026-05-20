@@ -5,6 +5,7 @@
 #include "common.h"
 #include "compat.h"
 #include "math.h"
+#include "raytracers.h"
 
 class PhongMaterial {
  public:
@@ -21,9 +22,11 @@ class PhongMaterial {
         refractiveIndex(refractiveIndex) {}
 
   // Not used
-  Vec3f f(auto, auto) const { return {}; }
-  Ray sampleRi(auto) const { return {}; }
-  compat::optional<BSDFSample> sample(auto, auto) const { return {}; }
+  RT_DEVICE_HOST Vec3f f(auto, auto) const { return {}; }
+  RT_DEVICE_HOST Ray sampleRi(auto) const { return {}; }
+  RT_DEVICE_HOST compat::optional<BSDFSample> sample(auto, auto) const {
+    return {};
+  }
 };
 
 class LambertBSDF {
@@ -34,11 +37,16 @@ class LambertBSDF {
   LambertBSDF() {}
   LambertBSDF(Vec3f albedo) : albedo(albedo) {}
 
-  Vec3f f(const Ray& ro, const Ray& ri) const { return albedo / M_PI; }
+  RT_DEVICE_HOST Vec3f f(const Ray& ro, const Ray& ri) const {
+    return albedo / M_PI;
+  }
 
-  Ray sampleRi(const Ray& ro) const { return {dist.sample(ro), Ray::Diffuse}; }
+  RT_DEVICE_HOST Ray sampleRi(const Ray& ro) const {
+    return {dist.sample(ro), Ray::Diffuse};
+  }
 
-  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST compat::optional<BSDFSample> sample(const Ray& ro,
+                                                     const Ray& ri) const {
     return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
   }
 };
@@ -49,17 +57,18 @@ class MetalBSDF {
 
   MetalBSDF(Vec3f albedo) : albedo(albedo) {}
 
-  Vec3f f(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST Vec3f f(const Ray& ro, const Ray& ri) const {
     return IsSpecular(ri.flag) ? albedo : 0;
   }
 
-  Ray sampleRi(const Ray& ro) const {
+  RT_DEVICE_HOST Ray sampleRi(const Ray& ro) const {
     Vec3f reflected;
     reflect(ro, reflected);
     return {DiracDeltaDistribution(reflected).sample(ro), Ray::Specular};
   }
 
-  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST compat::optional<BSDFSample> sample(const Ray& ro,
+                                                     const Ray& ri) const {
     return BSDFSample(f(ro, ri), 0);
   }
 };
@@ -73,11 +82,11 @@ class DielectricBSDF {
     R0 = std::powf((ior - 1) / (ior + 1), 2);
   }
 
-  Vec3f f(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST Vec3f f(const Ray& ro, const Ray& ri) const {
     return IsSpecular(ri.flag) ? 1 : 0;
   }
 
-  Ray sampleRi(const Ray& ro) const {
+  RT_DEVICE_HOST Ray sampleRi(const Ray& ro) const {
     Ray ri;
     float VoH = ro.z;
     bool isInside = VoH < 0;
@@ -99,16 +108,19 @@ class DielectricBSDF {
         isTransmission ? Ray::SpecularTransmission : Ray::SpecularReflection};
   }
 
-  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST compat::optional<BSDFSample> sample(const Ray& ro,
+                                                     const Ray& ri) const {
     return BSDFSample(f(ro, ri), 0);
   }
 };
 
 class Microfacet {
  public:
-  static bool EffectivelySmooth(float roughness) { return roughness < 1e-3; }
+  RT_DEVICE_HOST static bool EffectivelySmooth(float roughness) {
+    return roughness < 1e-3;
+  }
 
-  static float RoughnessToAlpha(float roughness) {
+  RT_DEVICE_HOST static float RoughnessToAlpha(float roughness) {
     return std::powf(roughness, 2);
   }
 };
@@ -135,9 +147,11 @@ class DielectricCoatBRDF {
         R0(std::powf((ior - 1) / (ior + 1), 2)),
         dist(alpha) {}
 
-  float E(const Vec3f& wo) const { return FresnelSchlick(std::abs(wo.z), R0); }
+  RT_DEVICE_HOST float E(const Vec3f& wo) const {
+    return FresnelSchlick(std::abs(wo.z), R0);
+  }
 
-  Vec3f f(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST Vec3f f(const Ray& ro, const Ray& ri) const {
     if (IsSpecular(ri.flag)) return Vec3f(1);
 
     Vec3f wh = ro + ri;
@@ -150,7 +164,7 @@ class DielectricCoatBRDF {
     return F * D * G1_schlick / (4 * ri.z * ro.z);
   }
 
-  Ray sampleRi(const Ray& ro) const {
+  RT_DEVICE_HOST Ray sampleRi(const Ray& ro) const {
     Ray ri;
     float VoH = ro.z;
     bool isInside = VoH < 0;
@@ -174,7 +188,8 @@ class DielectricCoatBRDF {
     return {dist.sample(ro), Ray::Reflection};
   }
 
-  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST compat::optional<BSDFSample> sample(const Ray& ro,
+                                                     const Ray& ri) const {
     if (IsSpecular(ri.flag)) return BSDFSample(Vec3f(1), 0);
     if (ro.z < 1e-6) return {};  // Undefined for transmission
     return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
@@ -199,18 +214,19 @@ class LayerBSDF {
   LayerBSDF(Coat coat, Substrate substrate)
       : coat(coat), substrate(substrate) {}
 
-  Vec3f f(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST Vec3f f(const Ray& ro, const Ray& ri) const {
     float ECoat = coat.E(ro);
     return coat.f(ro, ri) + (1 - ECoat) * substrate.f(ro, ri);
   }
 
-  Ray sampleRi(const Ray& ro) const {
+  RT_DEVICE_HOST Ray sampleRi(const Ray& ro) const {
     Ray ri = coat.sampleRi(ro);
     if (IsReflection(ri.flag)) return ri;
     return IsReflection(ri.flag) ? ri : substrate.sampleRi(ro);
   }
 
-  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST compat::optional<BSDFSample> sample(const Ray& ro,
+                                                     const Ray& ri) const {
     if (IsSpecular(ri.flag)) return coat.sample(ro, ri);
 
     float ECoat = coat.E(ro);
@@ -255,17 +271,18 @@ class Material {
   Material() : mat(LambertBSDF()) {}
   Material(MaterialType mat) : mat(mat) {}
 
-  Vec3f f(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST Vec3f f(const Ray& ro, const Ray& ri) const {
     return compat::visit(
         [ro, ri](auto&& mat) -> Vec3f { return mat.f(ro, ri); }, mat);
   }
 
-  Ray sampleRi(const Ray& ro) const {
+  RT_DEVICE_HOST Ray sampleRi(const Ray& ro) const {
     return compat::visit([ro](auto&& mat) -> Ray { return mat.sampleRi(ro); },
                          mat);
   }
 
-  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  RT_DEVICE_HOST compat::optional<BSDFSample> sample(const Ray& ro,
+                                                     const Ray& ri) const {
     return compat::visit(
         [ro, ri](auto&& mat) -> compat::optional<BSDFSample> {
           return mat.sample(ro, ri);

@@ -3,6 +3,7 @@
 #include "Sampler.h"
 #include "compat.h"
 #include "math.h"
+#include "raytracers.h"
 
 class Sphere {
  public:
@@ -12,8 +13,8 @@ class Sphere {
   Sphere() : pos({}), radius(0) {}
   Sphere(const Vec3f p, const float r) : pos(p), radius(r) {}
 
-  inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
-                        Vec3f& N) const {
+  RT_DEVICE_HOST bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
+                                Vec3f& N) const {
     if (radius < 1e-6) return false;
 
     Vec3f L = (pos - orig);
@@ -32,9 +33,9 @@ class Sphere {
     return true;
   }
 
-  float pdf(auto, auto) const { return 0; }
+  RT_DEVICE_HOST float pdf(auto, auto) const { return 0; }
 
-  Vec3f generate(auto) const { return {}; }
+  RT_DEVICE_HOST Vec3f generate(auto) const { return {}; }
 };
 
 class Plane {
@@ -44,8 +45,8 @@ class Plane {
   float halfHeight;
   Vec3f normal = Vec3f(0, 1, 0);
 
-  inline bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
-                        Vec3f& N) const {
+  RT_DEVICE_HOST bool intersect(const Vec3f& orig, const Vec3f& dir, float& t0,
+                                Vec3f& N) const {
     Vec3f L = (pos - orig);
     float dirDotNormal = dot(dir, normal);
     if (std::fabs(dirDotNormal) < 1e-8) {
@@ -68,7 +69,7 @@ class Plane {
     }
   }
 
-  inline float pdf(const Vec3f& direction, const Vec3f& origin) const {
+  RT_DEVICE_HOST float pdf(const Vec3f& direction, const Vec3f& origin) const {
     float d;
     Vec3f N;
 
@@ -80,14 +81,14 @@ class Plane {
     return d * d / (NoL * lightArea);
   }
 
-  Vec3f generate(const Vec3f& origin) const {
+  RT_DEVICE_HOST Vec3f generate(const Vec3f& origin) const {
     Vec2f u = Sampler::Get2D();
     Vec3f p{pos.x + u.x * 2 * halfWidth - halfWidth, pos.y,
             pos.z + u.y * 2 * halfHeight - halfHeight};
     return (p - origin).normalize();
   }
 
-  Plane(Vec3f p, float w, float h, Vec3f normal)
+  RT_DEVICE_HOST Plane(Vec3f p, float w, float h, Vec3f normal)
       : pos(p), halfWidth(w), halfHeight(h), normal(normal) {
     this->normal = normal.normalize();
     Vec3f up = {0, 1, 0};
@@ -114,12 +115,12 @@ class Mesh {
   Mesh() : mesh(Sphere()) {}
   Mesh(MeshVariant mesh) : mesh(mesh) {}
 
-  Vec3f pos() const {
+  RT_DEVICE_HOST Vec3f pos() const {
     return compat::visit([](auto&& m) { return m.pos; }, mesh);
   }
 
-  bool intersect(const Vec3f& orig, const Vec3f& dir, float& t,
-                 Vec3f& n) const {
+  RT_DEVICE_HOST bool intersect(const Vec3f& orig, const Vec3f& dir, float& t,
+                                Vec3f& n) const {
     struct Result {
       float t = 0;
       Vec3f n;
@@ -139,12 +140,12 @@ class Mesh {
     return t > 0;
   }
 
-  float pdf(const Vec3f& pos, const Vec3f& dir) const {
+  RT_DEVICE_HOST float pdf(const Vec3f& pos, const Vec3f& dir) const {
     return compat::visit([pos, dir](auto&& arg) { return arg.pdf(pos, dir); },
                          mesh);
   }
 
-  Vec3f generate(const Vec3f& pos) const {
+  RT_DEVICE_HOST Vec3f generate(const Vec3f& pos) const {
     return compat::visit([pos](auto&& arg) { return arg.generate(pos); }, mesh);
   }
 };

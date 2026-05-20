@@ -4,13 +4,14 @@
 
 #include "SceneObject.h"
 #include "helpers.h"
+#include "raytracers.h"
 
 template <typename T>
 concept Emitter = requires(T t) {
   { t.L() } -> std::same_as<Vec3f>;
 };
 
-bool constexpr IsLight(const SceneObject* obj) {
+RT_DEVICE_HOST inline bool IsLight(const SceneObject* obj) {
   if (!obj) return false;
   return obj->visit(overloaded{
       [](Emitter auto&&) { return true; },
@@ -21,9 +22,9 @@ bool constexpr IsLight(const SceneObject* obj) {
 // Light interface to use with SceneObject
 class Light {
  public:
-  Light(const SceneObject* obj) : obj(obj) {}
+  RT_DEVICE_HOST Light(const SceneObject* obj) : obj(obj) {}
 
-  Vec3f L() {
+  RT_DEVICE_HOST Vec3f L() {
     return obj->visit(overloaded{
         [](Emitter auto&& l) { return l.L(); },
         [](auto&&) { return Vec3f{0}; },

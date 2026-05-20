@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "SceneObject.h"
+#include "raytracers.h"
 
 class LightObject;
 
@@ -23,11 +24,11 @@ class Allocator {
   int objectsSize = 0;
   int lightsSize = 0;
 
-  const Material* getMaterial(const SceneObject* obj) const {
+  RT_DEVICE_HOST const Material* getMaterial(const SceneObject* obj) const {
     return &materials[obj->materialId];
   }
 
-  const Mesh* getMesh(const SceneObject* obj) const {
+  RT_DEVICE_HOST const Mesh* getMesh(const SceneObject* obj) const {
     return &meshes[obj->meshId];
   }
 

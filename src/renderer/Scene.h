@@ -27,8 +27,8 @@ class Scene {
   Allocator allocator;
   Camera camera;
 
-  inline compat::optional<Intersection> intersect(const Vec3f& origin,
-                                                  const Vec3f& dir) const {
+  RT_DEVICE_HOST compat::optional<Intersection> intersect(
+      const Vec3f& origin, const Vec3f& dir) const {
     // TODO: Pass min/max distance from argument.
     float MAX_DIST = 1000.f;
     float t0 = MAX_DIST;
@@ -60,7 +60,7 @@ class Scene {
     return {};
   }
 
-  const SceneObject* sampleLight() const {
+  RT_DEVICE_HOST const SceneObject* sampleLight() const {
     if (allocator.lightsSize == 0) return nullptr;
     int idx = std::fminf(Sampler::Get1D() * allocator.lightsSize,
                          allocator.lightsSize - 1);

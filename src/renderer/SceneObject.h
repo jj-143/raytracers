@@ -2,6 +2,7 @@
 
 #include "compat.h"
 #include "math.h"
+#include "raytracers.h"
 
 class BaseObject {};
 
@@ -16,7 +17,7 @@ class BaseLight {
 
   BaseLight(Vec3f color, float power) : color(color), power(power) {}
 
-  Vec3f L() const { return color * power; }
+  RT_DEVICE_HOST Vec3f L() const { return color * power; }
 };
 
 class SceneObject {
@@ -33,12 +34,12 @@ class SceneObject {
       : obj(obj), meshId(meshId), materialId(materialId) {}
 
   template <typename Visitor>
-  decltype(auto) visit(Visitor&& visitor) {
+  RT_DEVICE_HOST decltype(auto) visit(Visitor&& visitor) {
     return compat::visit(std::forward<Visitor>(visitor), obj);
   }
 
   template <typename Visitor>
-  decltype(auto) visit(Visitor&& visitor) const {
+  RT_DEVICE_HOST decltype(auto) visit(Visitor&& visitor) const {
     return compat::visit(std::forward<Visitor>(visitor), obj);
   }
 };

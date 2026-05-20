@@ -1,6 +1,7 @@
 #pragma once
 
 #include "math.h"
+#include "raytracers.h"
 
 class Ray : public Vec3f {
  public:
@@ -17,28 +18,35 @@ class Ray : public Vec3f {
 
   Flag flag = Unset;
 
-  Ray() = default;
-  Ray(Vec3f dir) : Vec3f(dir) {};
-  Ray(Vec3f dir, Flag flag) : Vec3f(dir), flag(flag) {};
+  RT_DEVICE_HOST Ray() {};
+  RT_DEVICE_HOST Ray(Vec3f dir) : Vec3f(dir) {};
+  RT_DEVICE_HOST Ray(Vec3f dir, Flag flag) : Vec3f(dir), flag(flag) {};
 };
 
-inline Ray::Flag operator|(Ray::Flag a, Ray::Flag b) {
+RT_DEVICE_HOST inline Ray::Flag operator|(Ray::Flag a, Ray::Flag b) {
   return Ray::Flag((int)a | (int)b);
 }
-inline Ray::Flag& operator|=(Ray::Flag& a, Ray::Flag b) {
+RT_DEVICE_HOST inline Ray::Flag& operator|=(Ray::Flag& a, Ray::Flag b) {
   (int&)a |= (int)b;
   return a;
 }
-inline Ray::Flag operator&(Ray::Flag a, Ray::Flag b) {
+RT_DEVICE_HOST inline Ray::Flag operator&(Ray::Flag a, Ray::Flag b) {
   return Ray::Flag((int)a & (int)b);
 }
-inline bool IsTransmission(Ray::Flag f) { return int(f & Ray::Transmission); }
-inline bool IsReflection(Ray::Flag f) { return int(f & Ray::Reflection); }
-inline bool IsSpecular(Ray::Flag f) { return int(f & Ray::Specular); }
+RT_DEVICE_HOST inline bool IsTransmission(Ray::Flag f) {
+  return int(f & Ray::Transmission);
+}
+RT_DEVICE_HOST inline bool IsReflection(Ray::Flag f) {
+  return int(f & Ray::Reflection);
+}
+RT_DEVICE_HOST inline bool IsSpecular(Ray::Flag f) {
+  return int(f & Ray::Specular);
+}
 
 struct BSDFSample {
   Vec3f fValue;
   float pdf;
 
-  BSDFSample(Vec3f fValue, float pdf) : fValue(fValue), pdf(pdf) {}
+  RT_DEVICE_HOST BSDFSample(Vec3f fValue, float pdf)
+      : fValue(fValue), pdf(pdf) {}
 };

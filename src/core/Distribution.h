@@ -2,10 +2,11 @@
 
 #include "Sampler.h"
 #include "math.h"
+#include "raytracers.h"
 
 class CosineDistribution {
  public:
-  Vec3f sample(const Vec3f& wo) const {
+  RT_DEVICE_HOST Vec3f sample(const Vec3f& wo) const {
     Vec2f u = Sampler::Get2D();
 
     float phi = 2 * M_PI * u.x;
@@ -18,17 +19,17 @@ class CosineDistribution {
     return wi;
   }
 
-  float pdf(const Vec3f& wo, const Vec3f& wi) const {
+  RT_DEVICE_HOST float pdf(const Vec3f& wo, const Vec3f& wi) const {
     return std::fmaxf(0.f, wi.z / M_PI);
   }
 };
 
 class DiracDeltaDistribution {
  public:
-  DiracDeltaDistribution(Vec3f w) : w(w) {}
+  RT_DEVICE_HOST DiracDeltaDistribution(Vec3f w) : w(w) {}
 
-  Vec3f sample(const Vec3f& wo) const { return w; }
-  float pdf(const Vec3f& wo, const Vec3f& wi) const { return 0; }
+  RT_DEVICE_HOST Vec3f sample(const Vec3f& wo) const { return w; }
+  RT_DEVICE_HOST float pdf(const Vec3f& wo, const Vec3f& wi) const { return 0; }
 
  private:
   Vec3f w;
@@ -37,16 +38,16 @@ class DiracDeltaDistribution {
 /* Trowbridge–Reitz (GGX) distribution model (isotropic) */
 class GGXDistribution {
  public:
-  GGXDistribution(float alpha) : alpha(alpha) {}
+  RT_DEVICE_HOST GGXDistribution(float alpha) : alpha(alpha) {}
 
-  Vec3f sample(const Vec3f& wo) const {
+  RT_DEVICE_HOST Vec3f sample(const Vec3f& wo) const {
     Vec3f wh = sampleWh(wo);
     Vec3f wi = -wo + 2 * wh * dot(wo, wh);
     if (wo.z < 0) wi.z *= -1;
     return wi;
   }
 
-  float pdf(const Vec3f& wo, const Vec3f& wi) const {
+  RT_DEVICE_HOST float pdf(const Vec3f& wo, const Vec3f& wi) const {
     Vec3f wh = (wi + wo).normalize();
     float absCosTheta = std::fabs(wh.z);
     float DValue = ndf(wh);
@@ -54,7 +55,7 @@ class GGXDistribution {
     return pdfWh / (4 * dot(wo, wh));
   }
 
-  float ndf(const Vec3f& wh) const {
+  RT_DEVICE_HOST float ndf(const Vec3f& wh) const {
     return alpha * alpha /
            (M_PI * (std::powf((wh.z * wh.z * (alpha * alpha - 1) + 1), 2)));
   }
@@ -62,7 +63,7 @@ class GGXDistribution {
  private:
   float alpha;
 
-  Vec3f sampleWh(const Vec3f& wo) const {
+  RT_DEVICE_HOST Vec3f sampleWh(const Vec3f& wo) const {
     // Sample angles for isotropic GGX variant
     Vec2f u = Sampler::Get2D();
     float beta = alpha * alpha - 1;

@@ -7,6 +7,7 @@
 #include "SceneObject.h"
 #include "compat.h"
 #include "onb.h"
+#include "raytracers.h"
 
 /**
  * Whitted style recursive raytracer using Phong illumination model, based on
@@ -19,7 +20,7 @@ class WhittedRaytracer {
   const int MAX_REFRACTION_DEPTH = 12;
   const float REFRACTIVE_INDEX_ENVIRONMENT = 1;  // air: 1, water: 1.33
 
-  inline Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
+  RT_DEVICE_HOST Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     Vec3f color;
     if (!traceBack(scene, orig, dir, color)) {
       return BACKGROUND_COLOR;
@@ -27,9 +28,10 @@ class WhittedRaytracer {
     return color;
   }
 
-  inline bool traceBack(const Scene& scene, const Vec3f& orig, const Vec3f dir,
-                        Vec3f& color, int depthReflection = 0,
-                        int depthRefraction = 0) {
+  RT_DEVICE_HOST bool traceBack(const Scene& scene, const Vec3f& orig,
+                                const Vec3f dir, Vec3f& color,
+                                int depthReflection = 0,
+                                int depthRefraction = 0) {
     // Also discard the ray if it exceeds maximum depth as if it doesn't hit
     // anything.
     // Alternative option is to not casting the reflection or refraction ray
@@ -129,12 +131,12 @@ class RecursivePathtracer {
  public:
   int maxDepth = 8;
 
-  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
+  RT_DEVICE_HOST Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     return traceBack(orig, dir, scene);
   }
 
-  Vec3f traceBack(const Vec3f& orig, const Vec3f dir, const Scene& scene,
-                  int depth = 0) {
+  RT_DEVICE_HOST Vec3f traceBack(const Vec3f& orig, const Vec3f dir,
+                                 const Scene& scene, int depth = 0) {
     if (depth > maxDepth) return Vec3f(0);
 
     const Allocator& alloc = scene.allocator;
@@ -193,7 +195,7 @@ class SimplePathtracer {
  public:
   int maxDepth = 8;
 
-  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
+  RT_DEVICE_HOST Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     int depth = 0;                 // trace depth
     bool isSpecularBounce = true;  // initially true for direct light hit
     Ray ro;                        // view ray "outgoing ray"
@@ -260,8 +262,8 @@ class SimplePathtracer {
     const SceneObject* light;
   };
 
-  compat::optional<LightSample> sampleDirectLight(const Scene& scene,
-                                                  const Vec3f& pos) const {
+  RT_DEVICE_HOST compat::optional<LightSample> sampleDirectLight(
+      const Scene& scene, const Vec3f& pos) const {
     const SceneObject* light = scene.sampleLight();
     if (!light) return {};
 
@@ -290,10 +292,10 @@ class Tracer {
  public:
   enum class Type { Whitted, Recursive, Simple };
 
-  Tracer() : tracer(SimplePathtracer()) {}
-  Tracer(TracerVariant tracer) : tracer(tracer) {}
+  RT_DEVICE_HOST Tracer() : tracer(SimplePathtracer()) {}
+  RT_DEVICE_HOST Tracer(TracerVariant tracer) : tracer(tracer) {}
 
-  Tracer static Create(Type type) {
+  RT_DEVICE_HOST Tracer static Create(Type type) {
     switch (type) {
       case Type::Whitted:
         return Tracer{WhittedRaytracer()};
@@ -306,7 +308,7 @@ class Tracer {
     }
   }
 
-  Vec3f trace(const Scene* scene, Vec3f orig, Vec3f dir) {
+  RT_DEVICE_HOST Vec3f trace(const Scene* scene, Vec3f orig, Vec3f dir) {
     return compat::visit(
         [scene, orig, dir](auto&& tracer) -> Vec3f {
           return tracer.trace(*scene, orig, dir);
