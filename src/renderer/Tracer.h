@@ -16,8 +16,8 @@
 class WhittedRaytracer {
  public:
   const Vec3f BACKGROUND_COLOR = Vec3f(0, 0, 0);
-  const int MAX_REFLECTION_DEPTH = 4;
-  const int MAX_REFRACTION_DEPTH = 12;
+  const int MAX_REFLECTION_DEPTH = 2;  // lowered due to stackoverflow in Cuda
+  const int MAX_REFRACTION_DEPTH = 2;
   const float REFRACTIVE_INDEX_ENVIRONMENT = 1;  // air: 1, water: 1.33
 
   RT_DEVICE_HOST Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
@@ -129,7 +129,7 @@ class WhittedRaytracer {
  */
 class RecursivePathtracer {
  public:
-  int maxDepth = 8;
+  int maxDepth = 3;  // lowered due to stackoverflow in Cuda
 
   RT_DEVICE_HOST Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     return traceBack(orig, dir, scene);
