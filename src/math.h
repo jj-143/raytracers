@@ -4,14 +4,16 @@
 #include <cmath>
 #include <iostream>
 
+#include "raytracers.h"
+
 template <size_t DIM, typename T>
 struct vec {
-  vec() { for (size_t i = DIM; i--; data_[i] = T()); }
-  T& operator[](const size_t i) {
+  RT_DEVICE_HOST vec() { for (size_t i = DIM; i--; data_[i] = T()); }
+  RT_DEVICE_HOST T& operator[](const size_t i) {
     assert(i < DIM);
     return data_[i];
   }
-  const T& operator[](const size_t i) const {
+  RT_DEVICE_HOST const T& operator[](const size_t i) const {
     assert(i < DIM);
     return data_[i];
   }
@@ -28,15 +30,15 @@ typedef vec<4, float> Vec4f;
 
 template <typename T>
 struct vec<2, T> {
-  vec() : x(T()), y(T()) {}
-  vec(T X, T Y) : x(X), y(Y) {}
+  RT_DEVICE_HOST vec() : x(T()), y(T()) {}
+  RT_DEVICE_HOST vec(T X, T Y) : x(X), y(Y) {}
   template <class U>
-  vec(const vec<2, U>& v);
-  T& operator[](const size_t i) {
+  RT_DEVICE_HOST vec(const vec<2, U>& v);
+  RT_DEVICE_HOST T& operator[](const size_t i) {
     assert(i < 2);
     return i <= 0 ? x : y;
   }
-  const T& operator[](const size_t i) const {
+  RT_DEVICE_HOST const T& operator[](const size_t i) const {
     assert(i < 2);
     return i <= 0 ? x : y;
   }
@@ -45,48 +47,48 @@ struct vec<2, T> {
 
 template <typename T>
 struct vec<3, T> {
-  vec() : x(T()), y(T()), z(T()) {}
-  vec(T X, T Y, T Z) : x(X), y(Y), z(Z) {}
-  vec(T V) : x(V), y(V), z(V) {}
-  T& operator[](const size_t i) {
+  RT_DEVICE_HOST vec() : x(T()), y(T()), z(T()) {}
+  RT_DEVICE_HOST vec(T X, T Y, T Z) : x(X), y(Y), z(Z) {}
+  RT_DEVICE_HOST vec(T V) : x(V), y(V), z(V) {}
+  RT_DEVICE_HOST T& operator[](const size_t i) {
     assert(i < 3);
     return i <= 0 ? x : (1 == i ? y : z);
   }
-  const T& operator[](const size_t i) const {
+  RT_DEVICE_HOST const T& operator[](const size_t i) const {
     assert(i < 3);
     return i <= 0 ? x : (1 == i ? y : z);
   }
 
-  vec<3, T>& operator+=(const vec<3, T>& v) {
+  RT_DEVICE_HOST vec<3, T>& operator+=(const vec<3, T>& v) {
     x += v.x;
     y += v.y;
     z += v.z;
     return *this;
   }
 
-  vec<3, T>& operator-=(const vec<3, T>& v) {
+  RT_DEVICE_HOST vec<3, T>& operator-=(const vec<3, T>& v) {
     x -= v.x;
     y -= v.y;
     z -= v.z;
     return *this;
   }
 
-  vec<3, T>& operator*=(const vec<3, T>& v) {
+  RT_DEVICE_HOST vec<3, T>& operator*=(const vec<3, T>& v) {
     x *= v.x;
     y *= v.y;
     z *= v.z;
     return *this;
   }
 
-  vec<3, T>& operator/=(const vec<3, T>& v) {
+  RT_DEVICE_HOST vec<3, T>& operator/=(const vec<3, T>& v) {
     x /= v.x;
     y /= v.y;
     z /= v.z;
     return *this;
   }
 
-  float norm() { return std::sqrt(x * x + y * y + z * z); }
-  vec<3, T>& normalize(T l = 1) {
+  RT_DEVICE_HOST float norm() { return std::sqrt(x * x + y * y + z * z); }
+  RT_DEVICE_HOST vec<3, T>& normalize(T l = 1) {
     *this = (*this) * (l / norm());
     return *this;
   }
@@ -109,72 +111,75 @@ struct vec<4, T> {
 };
 
 template <size_t DIM, typename T>
-vec<DIM, T> operator*(const vec<DIM, T>& lhs, const vec<DIM, T>& rhs) {
+RT_DEVICE_HOST vec<DIM, T> operator*(const vec<DIM, T>& lhs,
+                                     const vec<DIM, T>& rhs) {
   vec<DIM, T> ret;
   for (size_t i = DIM; i--; ret[i] = lhs[i] * rhs[i]);
   return ret;
 }
 
 template <size_t DIM, typename T>
-T dot(const vec<DIM, T>& lhs, const vec<DIM, T>& rhs) {
+RT_DEVICE_HOST T dot(const vec<DIM, T>& lhs, const vec<DIM, T>& rhs) {
   T ret = T();
   for (size_t i = DIM; i--; ret += lhs[i] * rhs[i]);
   return ret;
 }
 
 template <size_t DIM, typename T>
-vec<DIM, T> operator+(vec<DIM, T> lhs, const vec<DIM, T>& rhs) {
+RT_DEVICE_HOST vec<DIM, T> operator+(vec<DIM, T> lhs, const vec<DIM, T>& rhs) {
   for (size_t i = DIM; i--; lhs[i] += rhs[i]);
   return lhs;
 }
 
 template <size_t DIM, typename T>
-vec<DIM, T> operator-(vec<DIM, T> lhs, const vec<DIM, T>& rhs) {
+RT_DEVICE_HOST vec<DIM, T> operator-(vec<DIM, T> lhs, const vec<DIM, T>& rhs) {
   for (size_t i = DIM; i--; lhs[i] -= rhs[i]);
   return lhs;
 }
 
 template <size_t DIM, typename T, typename U>
-vec<DIM, T> operator*(const vec<DIM, T>& lhs, const U& rhs) {
+RT_DEVICE_HOST vec<DIM, T> operator*(const vec<DIM, T>& lhs, const U& rhs) {
   vec<DIM, T> ret;
   for (size_t i = DIM; i--; ret[i] = lhs[i] * rhs);
   return ret;
 }
 
 template <size_t DIM, typename T, typename U>
-vec<DIM, T> operator*(const U& lhs, const vec<DIM, T>& rhs) {
+RT_DEVICE_HOST vec<DIM, T> operator*(const U& lhs, const vec<DIM, T>& rhs) {
   vec<DIM, T> ret;
   for (size_t i = DIM; i--; ret[i] = rhs[i] * lhs);
   return ret;
 }
 
 template <size_t DIM, typename T, typename U>
-vec<DIM, T> operator/(const vec<DIM, T>& lhs, const U& rhs) {
+RT_DEVICE_HOST vec<DIM, T> operator/(const vec<DIM, T>& lhs, const U& rhs) {
   vec<DIM, T> ret;
   for (size_t i = DIM; i--; ret[i] = lhs[i] / rhs);
   return ret;
 }
 
 template <size_t DIM, typename T>
-vec<DIM, T> operator-(const vec<DIM, T>& lhs) {
+RT_DEVICE_HOST vec<DIM, T> operator-(const vec<DIM, T>& lhs) {
   return lhs * T(-1);
 }
 
 template <typename T>
-vec<3, T> cross(vec<3, T> v1, vec<3, T> v2) {
+RT_DEVICE_HOST vec<3, T> cross(vec<3, T> v1, vec<3, T> v2) {
   return vec<3, T>(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z,
                    v1.x * v2.y - v1.y * v2.x);
 }
 
 template <size_t DIM, typename T>
-std::ostream& operator<<(std::ostream& out, const vec<DIM, T>& v) {
+RT_DEVICE_HOST std::ostream& operator<<(std::ostream& out,
+                                        const vec<DIM, T>& v) {
   for (unsigned int i = 0; i < DIM; i++) {
     out << v[i] << " ";
   }
   return out;
 }
 
-inline bool refract(const Vec3f& d, const Vec3f& N, float eta, Vec3f& dir) {
+RT_DEVICE_HOST inline bool refract(const Vec3f& d, const Vec3f& N, float eta,
+                                   Vec3f& dir) {
   float cosI = -dot(d, N);
   float sinI = sqrtf(1 - cosI * cosI);
   if (sinI > 1 / eta) return false;  // total reflection
@@ -190,13 +195,15 @@ inline bool refract(const Vec3f& d, const Vec3f& N, float eta, Vec3f& dir) {
 }
 
 // Set wi as the mirror reflection of wo in ONB space
-inline void reflect(const Vec3f& wo, Vec3f& wi) {
+RT_DEVICE_HOST inline void reflect(const Vec3f& wo, Vec3f& wi) {
   wi = -wo;
   wi.z = wo.z;
 }
 
-inline float FresnelSchlick(float VoH, float F0) {
+RT_DEVICE_HOST inline float FresnelSchlick(float VoH, float F0) {
   return F0 + std::powf(1 - VoH, 5) * (1 - F0);
 }
 
-inline bool sameHemisphere(Vec3f w1, Vec3f w2) { return w1.z * w2.z > 0; }
+RT_DEVICE_HOST inline bool sameHemisphere(Vec3f w1, Vec3f w2) {
+  return w1.z * w2.z > 0;
+}
