@@ -1,7 +1,6 @@
 #pragma once
 
-#include <variant>
-
+#include "compat.h"
 #include "math.h"
 
 class BaseObject {};
@@ -21,7 +20,7 @@ class BaseLight {
 };
 
 class SceneObject {
-  using ObjectType = std::variant<BaseObject, BaseLight>;
+  using ObjectType = compat::variant<BaseObject, BaseLight>;
   ObjectType obj;
 
  public:
@@ -35,11 +34,11 @@ class SceneObject {
 
   template <typename Visitor>
   decltype(auto) visit(Visitor&& visitor) {
-    return std::visit(std::forward<Visitor>(visitor), obj);
+    return compat::visit(std::forward<Visitor>(visitor), obj);
   }
 
   template <typename Visitor>
   decltype(auto) visit(Visitor&& visitor) const {
-    return std::visit(std::forward<Visitor>(visitor), obj);
+    return compat::visit(std::forward<Visitor>(visitor), obj);
   }
 };

@@ -1,12 +1,11 @@
 #pragma once
 
-#include <optional>
-
 #include "Allocator.h"
 #include "Material.h"
 #include "Sampler.h"
 #include "Scene.h"
 #include "SceneObject.h"
+#include "compat.h"
 #include "onb.h"
 
 /**
@@ -42,7 +41,7 @@ class WhittedRaytracer {
 
     const Allocator& alloc = scene.allocator;
 
-    std::optional<Intersection> intr = scene.intersect(orig, dir);
+    compat::optional<Intersection> intr = scene.intersect(orig, dir);
     if (!intr) return false;
 
     Vec3f& hit = intr->hit;
@@ -139,7 +138,7 @@ class RecursivePathtracer {
 
     const Allocator& alloc = scene.allocator;
 
-    std::optional<Intersection> intr = scene.intersect(orig, dir);
+    compat::optional<Intersection> intr = scene.intersect(orig, dir);
     if (!intr) return Vec3f(0);
 
     Vec3f& hit = intr->hit;
@@ -154,7 +153,7 @@ class RecursivePathtracer {
     ri = bsdf.sampleRi(ro);
 
     if (IsSpecular(ri.flag)) {
-      std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
+      compat::optional<BSDFSample> bs = bsdf.sample(ro, ri);
       if (!bs) return Vec3f(0);
       Vec3f wiW = onb.toWorldSpace(ri);
       Vec3f Li = traceBack(hit + wiW * 1e-3, wiW, scene, depth + 1);
@@ -171,7 +170,7 @@ class RecursivePathtracer {
       wiW = onb.toWorldSpace(ri);
     }
 
-    std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
+    compat::optional<BSDFSample> bs = bsdf.sample(ro, ri);
     if (!bs) return Vec3f(0);
     float NoL = ri.z;
     if (NoL < 0) return Vec3f(0);
@@ -205,7 +204,7 @@ class SimplePathtracer {
     while (beta.x > 0 || beta.y > 0 || beta.z > 0) {
       if (depth++ == maxDepth) break;
 
-      std::optional<Intersection> intr = scene.intersect(orig, -woW);
+      compat::optional<Intersection> intr = scene.intersect(orig, -woW);
       if (!intr) break;
 
       Vec3f& hit = intr->hit;
@@ -223,7 +222,7 @@ class SimplePathtracer {
       }
 
       // Direct light sampling
-      if (std::optional<LightSample> ls = sampleDirectLight(scene, hit)) {
+      if (compat::optional<LightSample> ls = sampleDirectLight(scene, hit)) {
         Vec3f wl = onb.toLocalSpace(ls->dir);
         if (wl.z > 0) {
           Lo += beta * Light(ls->light).L() * bsdf.f(ro, wl) * std::abs(wl.z) /
@@ -235,7 +234,7 @@ class SimplePathtracer {
       ri = bsdf.sampleRi(ro);
       isSpecularBounce = IsSpecular(ri.flag);
 
-      std::optional<BSDFSample> bs = bsdf.sample(ro, ri);
+      compat::optional<BSDFSample> bs = bsdf.sample(ro, ri);
       if (!bs) break;
       float NoL = ri.z;
 
@@ -260,8 +259,8 @@ class SimplePathtracer {
     const SceneObject* light;
   };
 
-  std::optional<LightSample> sampleDirectLight(const Scene& scene,
-                                               const Vec3f& pos) const {
+  compat::optional<LightSample> sampleDirectLight(const Scene& scene,
+                                                  const Vec3f& pos) const {
     const SceneObject* light = scene.sampleLight();
     if (!light) return {};
 
@@ -270,7 +269,8 @@ class SimplePathtracer {
     const Mesh* mesh = alloc.getMesh(light);
     Vec3f wlW = mesh->generate(pos);
 
-    std::optional<Intersection> intr = scene.intersect(pos + wlW * 1e-3, wlW);
+    compat::optional<Intersection> intr =
+        scene.intersect(pos + wlW * 1e-3, wlW);
     bool occuluded = !intr || intr->object != light;
     if (occuluded) return {};
 
@@ -283,7 +283,7 @@ class SimplePathtracer {
 
 class Tracer {
   using TracerVariant =
-      std::variant<WhittedRaytracer, RecursivePathtracer, SimplePathtracer>;
+      compat::variant<WhittedRaytracer, RecursivePathtracer, SimplePathtracer>;
   TracerVariant tracer;
 
  public:
@@ -306,7 +306,7 @@ class Tracer {
   }
 
   Vec3f trace(const Scene* scene, Vec3f orig, Vec3f dir) {
-    return std::visit(
+    return compat::visit(
         [scene, orig, dir](auto&& tracer) -> Vec3f {
           return tracer.trace(*scene, orig, dir);
         },

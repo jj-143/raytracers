@@ -1,11 +1,9 @@
 #pragma once
 
-#include <optional>
-#include <variant>
-
 #include "Distribution.h"
 #include "Sampler.h"
 #include "common.h"
+#include "compat.h"
 #include "math.h"
 
 class PhongMaterial {
@@ -25,7 +23,7 @@ class PhongMaterial {
   // Not used
   Vec3f f(auto, auto) const { return {}; }
   Ray sampleRi(auto) const { return {}; }
-  std::optional<BSDFSample> sample(auto, auto) const { return {}; }
+  compat::optional<BSDFSample> sample(auto, auto) const { return {}; }
 };
 
 class LambertBSDF {
@@ -40,7 +38,7 @@ class LambertBSDF {
 
   Ray sampleRi(const Ray& ro) const { return {dist.sample(ro), Ray::Diffuse}; }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
   }
 };
@@ -61,7 +59,7 @@ class MetalBSDF {
     return {DiracDeltaDistribution(reflected).sample(ro), Ray::Specular};
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     return BSDFSample(f(ro, ri), 0);
   }
 };
@@ -101,7 +99,7 @@ class DielectricBSDF {
         isTransmission ? Ray::SpecularTransmission : Ray::SpecularReflection};
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     return BSDFSample(f(ro, ri), 0);
   }
 };
@@ -176,7 +174,7 @@ class DielectricCoatBRDF {
     return {dist.sample(ro), Ray::Reflection};
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     if (IsSpecular(ri.flag)) return BSDFSample(Vec3f(1), 0);
     if (ro.z < 1e-6) return {};  // Undefined for transmission
     return BSDFSample(f(ro, ri), dist.pdf(ro, ri));
@@ -212,7 +210,7 @@ class LayerBSDF {
     return IsReflection(ri.flag) ? ri : substrate.sampleRi(ro);
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
     if (IsSpecular(ri.flag)) return coat.sample(ro, ri);
 
     float ECoat = coat.E(ro);
@@ -248,8 +246,9 @@ class GlossyDiffuseLambertBSDF
 };
 
 class Material {
-  using MaterialType = std::variant<PhongMaterial, LambertBSDF, MetalBSDF,
-                                    DielectricBSDF, GlossyDiffuseLambertBSDF>;
+  using MaterialType =
+      compat::variant<PhongMaterial, LambertBSDF, MetalBSDF, DielectricBSDF,
+                      GlossyDiffuseLambertBSDF>;
   MaterialType mat;
 
  public:
@@ -257,18 +256,18 @@ class Material {
   Material(MaterialType mat) : mat(mat) {}
 
   Vec3f f(const Ray& ro, const Ray& ri) const {
-    return std::visit([ro, ri](auto&& mat) -> Vec3f { return mat.f(ro, ri); },
-                      mat);
+    return compat::visit(
+        [ro, ri](auto&& mat) -> Vec3f { return mat.f(ro, ri); }, mat);
   }
 
   Ray sampleRi(const Ray& ro) const {
-    return std::visit([ro](auto&& mat) -> Ray { return mat.sampleRi(ro); },
-                      mat);
+    return compat::visit([ro](auto&& mat) -> Ray { return mat.sampleRi(ro); },
+                         mat);
   }
 
-  std::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
-    return std::visit(
-        [ro, ri](auto&& mat) -> std::optional<BSDFSample> {
+  compat::optional<BSDFSample> sample(const Ray& ro, const Ray& ri) const {
+    return compat::visit(
+        [ro, ri](auto&& mat) -> compat::optional<BSDFSample> {
           return mat.sample(ro, ri);
         },
         mat);

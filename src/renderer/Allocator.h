@@ -52,7 +52,7 @@ class Allocator {
     std::construct_at(&objects[objectsSize], T(std::forward<Args>(args)...),
                       meshId, materialId);
 
-    if constexpr (std::is_same_v<T, BaseLight>) {
+    if constexpr (compat::is_same_v<T, BaseLight>) {
       lights[lightsSize++] = objectsSize;
     }
 

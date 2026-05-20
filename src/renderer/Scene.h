@@ -2,11 +2,11 @@
 
 #include <cstddef>
 #include <limits>
-#include <optional>
 
 #include "Allocator.h"
 #include "Light.h"
 #include "Mesh.h"
+#include "compat.h"
 #include "math.h"
 
 class SceneObject;
@@ -20,7 +20,7 @@ struct Intersection {
   Vec3f hit;
   Vec3f n;
   const SceneObject* object;
-  std::optional<Light> light;
+  compat::optional<Light> light;
 };
 
 class Scene {
@@ -28,8 +28,8 @@ class Scene {
   Allocator allocator;
   Camera camera;
 
-  inline std::optional<Intersection> intersect(const Vec3f& origin,
-                                               const Vec3f& dir) const {
+  inline compat::optional<Intersection> intersect(const Vec3f& origin,
+                                                  const Vec3f& dir) const {
     // TODO: Pass min/max distance from argument.
     float MAX_DIST = std::numeric_limits<float>().max();
     float t0 = MAX_DIST;
@@ -54,8 +54,8 @@ class Scene {
           .hit = hit,
           .n = N,
           .object = object,
-          .light =
-              IsLight(object) ? std::optional<Light>(object) : std::nullopt,
+          .light = IsLight(object) ? compat::optional<Light>(object)
+                                   : compat::nullopt,
       };
     }
     return {};

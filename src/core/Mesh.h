@@ -1,8 +1,7 @@
 #pragma once
 
-#include <variant>
-
 #include "Sampler.h"
+#include "compat.h"
 #include "math.h"
 
 class Sphere {
@@ -108,7 +107,7 @@ class Plane {
 };
 
 class Mesh {
-  using MeshVariant = std::variant<Plane, Sphere>;
+  using MeshVariant = compat::variant<Plane, Sphere>;
   MeshVariant mesh;
 
  public:
@@ -116,7 +115,7 @@ class Mesh {
   Mesh(MeshVariant mesh) : mesh(mesh) {}
 
   Vec3f pos() const {
-    return std::visit([](auto&& m) { return m.pos; }, mesh);
+    return compat::visit([](auto&& m) { return m.pos; }, mesh);
   }
 
   bool intersect(const Vec3f& orig, const Vec3f& dir, float& t,
@@ -126,7 +125,7 @@ class Mesh {
       Vec3f n;
     };
 
-    Result result = std::visit(
+    Result result = compat::visit(
         [orig, dir](auto&& m) -> Result {
           float t;
           Vec3f n;
@@ -141,11 +140,11 @@ class Mesh {
   }
 
   float pdf(const Vec3f& pos, const Vec3f& dir) const {
-    return std::visit([pos, dir](auto&& arg) { return arg.pdf(pos, dir); },
-                      mesh);
+    return compat::visit([pos, dir](auto&& arg) { return arg.pdf(pos, dir); },
+                         mesh);
   }
 
   Vec3f generate(const Vec3f& pos) const {
-    return std::visit([pos](auto&& arg) { return arg.generate(pos); }, mesh);
+    return compat::visit([pos](auto&& arg) { return arg.generate(pos); }, mesh);
   }
 };
