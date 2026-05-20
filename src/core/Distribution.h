@@ -19,7 +19,7 @@ class CosineDistribution {
   }
 
   float pdf(const Vec3f& wo, const Vec3f& wi) const {
-    return std::fmax(0.f, wi.z / M_PI);
+    return std::fmaxf(0.f, wi.z / M_PI);
   }
 };
 
@@ -69,12 +69,12 @@ class GGXDistribution {
 
     float cos2theta =
         1 / (beta * beta) * ((beta + 1) / (u.x + 1 / beta) - beta);
-    cos2theta = std::fmax(0, cos2theta);
+    cos2theta = std::fmaxf(0, cos2theta);
     float phi = u.y * 2 * M_PI;
 
     // Map sampled angles to normal direction wh
     float cosTheta = std::sqrt(cos2theta);
-    float sinTheta = std::sqrt(std::max((float)0, 1 - cos2theta));
+    float sinTheta = std::sqrt(std::fmaxf((float)0, 1 - cos2theta));
     Vec3f wh(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
 
     if (!sameHemisphere(wo, wh)) wh = -wh;

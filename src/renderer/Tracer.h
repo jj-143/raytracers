@@ -99,11 +99,12 @@ class WhittedRaytracer {
 
       Vec3f L = Light(light).L();
 
-      diffColor = diffColor + std::max(0.f, NoL) * L;
+      diffColor = diffColor + std::fmaxf(0.f, NoL) * L;
 
-      specColor = specColor + powf(std::max(0.f, dot(reflectionDir, dirLight)),
-                                   material.specularExponent) *
-                                  L;
+      specColor =
+          specColor + std::powf(std::fmaxf(0.f, dot(reflectionDir, dirLight)),
+                                material.specularExponent) *
+                          L;
     }
 
     color = material.albedo * diffColor + material.constants[0] * specColor +

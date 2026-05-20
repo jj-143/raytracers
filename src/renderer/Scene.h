@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <limits>
 
 #include "Allocator.h"
 #include "Light.h"
@@ -31,7 +30,7 @@ class Scene {
   inline compat::optional<Intersection> intersect(const Vec3f& origin,
                                                   const Vec3f& dir) const {
     // TODO: Pass min/max distance from argument.
-    float MAX_DIST = std::numeric_limits<float>().max();
+    float MAX_DIST = 1000.f;
     float t0 = MAX_DIST;
     Vec3f hit;
     Vec3f N;
@@ -63,8 +62,8 @@ class Scene {
 
   const SceneObject* sampleLight() const {
     if (allocator.lightsSize == 0) return nullptr;
-    int idx = std::min<int>(Sampler::Get1D() * allocator.lightsSize,
-                            allocator.lightsSize - 1);
+    int idx = std::fminf(Sampler::Get1D() * allocator.lightsSize,
+                         allocator.lightsSize - 1);
     return &allocator.objects[allocator.lights[idx]];
   }
 };
