@@ -9,25 +9,18 @@
 #include "SceneObject.h"
 #include "onb.h"
 
-class Tracer {
- public:
-  virtual inline Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
-    return Vec3f(0);
-  }
-};
-
 /**
  * Whitted style recursive raytracer using Phong illumination model, based on
  * `tinyraytracer`. Should be used with [PhongMaterial]
  */
-class WhittedRaytracer : public Tracer {
+class WhittedRaytracer {
  public:
   const Vec3f BACKGROUND_COLOR = Vec3f(0, 0, 0);
   const int MAX_REFLECTION_DEPTH = 4;
   const int MAX_REFRACTION_DEPTH = 12;
   const float REFRACTIVE_INDEX_ENVIRONMENT = 1;  // air: 1, water: 1.33
 
-  inline Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) override {
+  inline Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     Vec3f color;
     if (!traceBack(scene, orig, dir, color)) {
       return BACKGROUND_COLOR;
@@ -132,11 +125,11 @@ class WhittedRaytracer : public Tracer {
  * pdf is always 0 for Dirac Delta distribution, effectively wasting 50% of the
  * samples.
  */
-class RecursivePathtracer : public Tracer {
+class RecursivePathtracer {
  public:
   int maxDepth = 8;
 
-  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) override {
+  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     return traceBack(orig, dir, scene);
   }
 
@@ -196,11 +189,11 @@ class RecursivePathtracer : public Tracer {
  * An iterative pathtracer using Monte Carlo & Direct Light Sampling,
  * based on `SimplePathtracer` from `PBRT`.
  */
-class SimplePathtracer : public Tracer {
+class SimplePathtracer {
  public:
   int maxDepth = 8;
 
-  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) override {
+  Vec3f trace(const Scene& scene, Vec3f orig, Vec3f dir) {
     int depth = 0;                 // trace depth
     bool isSpecularBounce = true;  // initially true for direct light hit
     Ray ro;                        // view ray "outgoing ray"
@@ -285,5 +278,38 @@ class SimplePathtracer : public Tracer {
     if (lightPdf < 1e-6) return {};
 
     return LightSample{.pdf = lightPdf, .dir = wlW, .light = light};
+  }
+};
+
+class Tracer {
+  using TracerVariant =
+      std::variant<WhittedRaytracer, RecursivePathtracer, SimplePathtracer>;
+  TracerVariant tracer;
+
+ public:
+  enum class Type { Whitted, Recursive, Simple };
+
+  Tracer() : tracer(SimplePathtracer()) {}
+  Tracer(TracerVariant tracer) : tracer(tracer) {}
+
+  Tracer static Create(Type type) {
+    switch (type) {
+      case Type::Whitted:
+        return Tracer{WhittedRaytracer()};
+      case Type::Recursive:
+        return Tracer{RecursivePathtracer()};
+      case Type::Simple:
+        return Tracer{SimplePathtracer()};
+      default:
+        return Tracer{SimplePathtracer()};
+    }
+  }
+
+  Vec3f trace(const Scene* scene, Vec3f orig, Vec3f dir) {
+    return std::visit(
+        [scene, orig, dir](auto&& tracer) -> Vec3f {
+          return tracer.trace(*scene, orig, dir);
+        },
+        tracer);
   }
 };

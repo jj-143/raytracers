@@ -18,7 +18,6 @@
 namespace example {
 struct Project {
   std::shared_ptr<Scene> scene;
-  std::shared_ptr<Tracer> tracer;
   RenderConfig config;
   std::string name;
 };
@@ -127,19 +126,19 @@ inline std::shared_ptr<Scene> CornellBoxBSDF(float roughness = .2) {
 
 inline Project ProjectWhittedRaytracer() {
   return {.scene = CornellBoxPhong(),
-          .tracer = std::make_shared<WhittedRaytracer>(),
+          .config = {.tracerType = Tracer::Type::Whitted},
           .name = "whitted_raytracer"};
 }
 
 inline Project ProjectRecursivePathtracer() {
   return {.scene = CornellBoxBSDF(),
-          .tracer = std::make_shared<RecursivePathtracer>(),
+          .config = {.tracerType = Tracer::Type::Recursive},
           .name = "recursive_pathtracer"};
 }
 
 inline Project ProjectSimplePathtracer(float roughness) {
   return {.scene = CornellBoxBSDF(roughness),
-          .tracer = std::make_shared<SimplePathtracer>(),
+          .config = {.tracerType = Tracer::Type::Simple},
           .name = std::format("simple_pathtracer_r{:d}", int(roughness * 100))};
 }
 
@@ -153,10 +152,13 @@ inline std::optional<Project> makeExampleProject(CliArgs args) {
                                     : std::optional<Project>{};
   if (!project) return {};
 
-  project->config = {.width = args.width,
-                     .height = args.height,
-                     .spp = args.spp,
-                     .seed = args.seed};
+  project->config = {
+      .width = args.width,
+      .height = args.height,
+      .spp = args.spp,
+      .seed = args.seed,
+      .tracerType = project->config.tracerType,
+  };
   return project;
 }
 }  // namespace example

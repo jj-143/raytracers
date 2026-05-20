@@ -13,16 +13,17 @@ struct RenderConfig {
   int height;
   int spp;
   int seed;
+  Tracer::Type tracerType;
 };
 
 class Renderer {
  public:
   RenderConfig config;
-  std::shared_ptr<Tracer> tracer;
+  Tracer tracer;
   float* framebuffer = nullptr;
-  std::unique_ptr<Sampler::Sampler> sampler;
 
-  Renderer(std::shared_ptr<Tracer> tracer) : tracer(tracer) {};
+  Renderer(RenderConfig config)
+      : config(config), tracer(Tracer::Create(config.tracerType)) {}
 
   inline void render(const Scene& scene) {
     float halfFov = scene.camera.fov / 2.;
@@ -51,7 +52,7 @@ class Renderer {
 
           Vec3f dir = Vec3f(x, y, -1).normalize();
 
-          Vec3f sampleColor = tracer->trace(scene, scene.camera.pos, dir);
+          Vec3f sampleColor = tracer.trace(&scene, scene.camera.pos, dir);
           color = color + sampleColor;
         }
         color = color * (1.f / sampler->spp);

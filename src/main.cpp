@@ -18,8 +18,7 @@ int main(int argc, char* argv[]) {
       example::makeExampleProject(args.value());
   if (!project) exit(1);
 
-  Renderer renderer(project->tracer);
-  renderer.config = project->config;
+  Renderer renderer(project->config);
 
   printf("Render started.\n");
 
