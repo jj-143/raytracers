@@ -2,11 +2,13 @@
 
 #include "CudaUtils.h"
 #include "Renderer.h"
+#include "data.h"
 #include "examples.h"
 #include "math.h"
 #include "raytracers.h"
 
-RT_GLOBAL void color(float* framebuffer, int spp, int width, int height) {
+RT_GLOBAL void color(float* framebuffer, int spp, int width, int height,
+                     Scene* scene) {
   int i = threadIdx.x + blockIdx.x * blockDim.x;
   int j = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -35,7 +37,13 @@ void renderWithGPU(const example::Project& project) {
 
   float* framebuffer = createFramebuffer(width, height);
 
-  color<<<blocks, threads>>>(framebuffer, spp, width, height);
+  // Load Scene & Upload
+  data::UploadScene(project.scene.get());
+
+  color<<<blocks, threads>>>(framebuffer, spp, width, height,
+                             data::GetGPUScene());
+  checkCudaErrors(cudaGetLastError());
+  checkCudaErrors(cudaDeviceSynchronize());
 
   // Save render & Clean up
   float* hostFB = copyFramebufferToHost(framebuffer, width, height);
