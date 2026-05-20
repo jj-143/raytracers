@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <optional>
 #include <variant>
 
@@ -12,12 +11,11 @@
 class PhongMaterial {
  public:
   Vec3f albedo;
-  std::array<float, 3> constants;  // k_specular, k_reflection, k_transmission
+  Vec3f constants;  // k_specular, k_reflection, k_transmission
   float specularExponent;
   float refractiveIndex;
 
-  PhongMaterial(Vec3f albedo = Vec3f(1, 0, 0),
-                std::array<float, 3> constants = {0, 0, 0},
+  PhongMaterial(Vec3f albedo = Vec3f(1, 0, 0), Vec3f constants = {0, 0, 0},
                 float specularExponent = 1, float refractiveIndex = 1)
       : albedo(albedo),
         constants(constants),
