@@ -1,18 +1,17 @@
 #pragma once
 
-#include <vector>
+#include <cstdint>
+#include <string>
 
-#include "math.h"
-
-float gammaTransform(float value, float gamma);
+void gammaEncode(float* framebuffer, int width, int height, float gamma);
 
 /*
  * Save framebuffer to "./{filename}.ppm"
  */
-void saveToPPM(std::vector<Vec3f> framebuffer, int width, int height,
+void saveToPPM(float* framebuffer, int width, int height,
                std::string filepath = "out.ppm");
 
-void saveToPNG(std::vector<Vec3f> framebuffer, int width, int height,
+void saveToPNG(float* framebuffer, int width, int height,
                std::string filepath = "out.png");
 
 int64_t nowMillis();

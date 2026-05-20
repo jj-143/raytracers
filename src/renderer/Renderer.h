@@ -19,7 +19,7 @@ class Renderer {
  public:
   RenderConfig config;
   std::shared_ptr<Tracer> tracer;
-  std::vector<Vec3f> framebuffer;
+  float* framebuffer = nullptr;
   std::unique_ptr<Sampler::Sampler> sampler;
 
   Renderer(std::shared_ptr<Tracer> tracer) : tracer(tracer) {};
@@ -28,7 +28,7 @@ class Renderer {
     float halfFov = scene.camera.fov / 2.;
     float pixelSize = tan(halfFov) / config.width;
 
-    this->framebuffer.resize(config.width * config.height);
+    initFramebuffer(config.width * config.height);
 
     int64_t now = nowMillis();
 
@@ -55,20 +55,26 @@ class Renderer {
           color = color + sampleColor;
         }
         color = color * (1.f / sampler->spp);
-        framebuffer[i + j * config.width] = color;
+
+        int idx = 3 * (j * config.width + i);
+
+        framebuffer[idx] = color[0];
+        framebuffer[idx + 1] = color[1];
+        framebuffer[idx + 2] = color[2];
       }
     }
 
     std::cout << "Render took " << (nowMillis() - now) << "ms" << std::endl;
 
-    // Gamma Encoding
-    for (size_t i = 0; i < config.height * config.width; ++i) {
-      for (size_t j = 0; j < 3; j++) {
-        if (framebuffer[i][j] != framebuffer[i][j]) {
-          framebuffer[i][j] = 0;  // NaN fix
-        }
-        framebuffer[i][j] = gammaTransform(framebuffer[i][j], 2.2);
-      }
-    }
+    gammaEncode(framebuffer, config.width, config.height, 2.2);
+  }
+
+  void destroy() {
+    if (framebuffer) free(framebuffer);
+  }
+
+ private:
+  void initFramebuffer(int size) {
+    framebuffer = (float*)malloc(3 * size * sizeof(float));
   }
 };

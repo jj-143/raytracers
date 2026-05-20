@@ -26,4 +26,6 @@ int main(int argc, char* argv[]) {
   renderer.render(*project->scene);
 
   example::saveRender(renderer, *project);
+
+  renderer.destroy();
 }

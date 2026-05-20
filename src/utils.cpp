@@ -1,12 +1,13 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "utils.h"
+
 #include <stb_write.h>
 
 #include <chrono>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <vector>
-
-#include "math.h"
+#include <string>
 
 namespace {
 bool writeToPNG(const char* filepath, void* data, const int& width,
@@ -24,7 +25,22 @@ float gammaTransform(float value, float gamma) {
   return 0;
 }
 
-void saveToPPM(std::vector<Vec3f> framebuffer, int width, int height,
+void gammaEncode(float* fb, int width, int height, float gamma) {
+  for (size_t i = 0; i < width; ++i) {
+    for (size_t j = 0; j < height; ++j) {
+      for (size_t ch = 0; ch < 3; ++ch) {
+        int idx = (j * width + i) * 3 + ch;
+
+        if (fb[idx] != fb[idx]) {
+          fb[idx] = 0;  // NaN fix
+        }
+        fb[idx] = gammaTransform(fb[idx], gamma);
+      }
+    }
+  }
+}
+
+void saveToPPM(float* framebuffer, int width, int height,
                std::string filepath) {
   std::ofstream ofs;  // save the framebuffer to file
   ofs.open(filepath);
@@ -32,21 +48,22 @@ void saveToPPM(std::vector<Vec3f> framebuffer, int width, int height,
   ofs << "P6\n" << width << " " << height << "\n255\n";
   for (size_t i = 0; i < height * width; ++i) {
     for (size_t j = 0; j < 3; j++) {
-      ofs << (char)(255 * std::max(0.f, std::min(1.f, framebuffer[i][j])));
+      int idx = i * 3 + j;
+      ofs << (char)(255 * std::max(0.f, std::min(1.f, framebuffer[idx])));
     }
   }
   ofs.close();
 }
 
-void saveToPNG(std::vector<Vec3f> framebuffer, int width, int height,
+void saveToPNG(float* framebuffer, int width, int height,
                std::string filepath) {
   unsigned char* data = new unsigned char[width * height * 3];
 
   for (size_t i = 0; i < height * width; ++i) {
     for (size_t j = 0; j < 3; j++) {
-      data[i * 3 + j] =
-          (unsigned char)(255 *
-                          std::max(0.f, std::min(1.f, framebuffer[i][j])));
+      int idx = i * 3 + j;
+      data[idx] =
+          (unsigned char)(255 * std::max(0.f, std::min(1.f, framebuffer[idx])));
     }
   }
 
