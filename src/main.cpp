@@ -4,6 +4,19 @@
 #include "examples.h"
 #include "renderer/Renderer.h"
 
+#ifdef GPU_RENDER
+#include "cuda/Renderer.h"
+#endif
+
+void renderWithCPU(example::Project& project) {
+  Renderer renderer(project.config);
+
+  renderer.render(*project.scene);
+  example::saveRender(renderer.framebuffer, project);
+
+  renderer.destroy();
+}
+
 int main(int argc, char* argv[]) {
   std::optional<CliArgs> args = parseArgs(argc, argv);
   if (!args) exit(2);
@@ -18,13 +31,11 @@ int main(int argc, char* argv[]) {
       example::makeExampleProject(args.value());
   if (!project) exit(1);
 
-  Renderer renderer(project->config);
-
   printf("Render started.\n");
 
-  renderer.render(*project->scene);
-
-  example::saveRender(renderer.framebuffer, *project);
-
-  renderer.destroy();
+#ifdef GPU_RENDER
+  renderWithGPU(*project);
+#else
+  renderWithCPU(*project);
+#endif
 }

@@ -1,0 +1,11 @@
+CompileFlags:
+  Remove:
+    [
+      -forward-unknown-to-host-compiler,
+      --generate-code=*,
+      -rdc=*,
+      --extended-lambda,
+      -arch=*,
+    ]
+Documentation:
+  CommentFormat: Doxygen
