@@ -1,5 +1,6 @@
 #include <curand_kernel.h>
 
+#include "CudaSampler.h"
 #include "CudaUtils.h"
 #include "Renderer.h"
 #include "data.h"
@@ -40,12 +41,19 @@ void renderWithGPU(const example::Project& project) {
   // Load Scene & Upload
   data::UploadScene(project.scene.get());
 
+  // Init Rand
+  cuda_sampler::InitSampler(0, width, height);
+  cuda_sampler::InitSamplerRand<<<blocks, threads>>>();
+  checkCudaErrors(cudaGetLastError());
+  checkCudaErrors(cudaDeviceSynchronize());
+
   color<<<blocks, threads>>>(framebuffer, spp, width, height,
                              data::GetGPUScene());
   checkCudaErrors(cudaGetLastError());
   checkCudaErrors(cudaDeviceSynchronize());
 
   // Save render & Clean up
+  cuda_sampler::DestroySampler();
   float* hostFB = copyFramebufferToHost(framebuffer, width, height);
   checkCudaErrors(cudaFree(framebuffer));
 

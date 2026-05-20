@@ -6,6 +6,11 @@
 #include "SamplerUtil.h"
 #include "math.h"
 #include "pcg_random.hpp"
+#include "raytracers.h"
+
+#ifdef GPU_RENDER
+#include "CudaSampler.h"
+#endif
 
 namespace Sampler {
 
@@ -105,7 +110,18 @@ inline std::shared_ptr<Sampler> InitSampler(int spp, int seed) {
   return sampler;
 }
 
+/* Sampler helpers */
+
+#if defined(__CUDA_ARCH__) and defined(GPU_RENDER)
+
+RT_DEVICE inline float Get1D() { return cuda_sampler::Get1D(); }
+RT_DEVICE inline Vec2f Get2D() { return cuda_sampler::Get2D(); }
+
+#else
+
 inline float Get1D() { return sampler->get1D(); }
 inline Vec2f Get2D() { return sampler->get2D(); }
+
+#endif
 
 }  // namespace Sampler
