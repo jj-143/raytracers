@@ -22,15 +22,14 @@ struct Project {
   std::string name;
 };
 
-inline void saveRender(const Renderer& renderer, const Project& project) {
+inline void saveRender(float* framebuffer, const Project& project) {
   auto& args = project.config;
   auto name = project.name.empty() ? "out" : project.name;
   std::string filename = std::format("{:s}_{:d}spp", name, args.spp);
 
   // Save to PNG
   std::string filepath = filename + ".png";
-  saveToPNG(renderer.framebuffer, renderer.config.width, renderer.config.height,
-            filepath);
+  saveToPNG(framebuffer, args.width, args.height, filepath);
 
   printf("Saved to file \"%s\"\n", filepath.c_str());
 }
