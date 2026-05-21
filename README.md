@@ -1,6 +1,6 @@
 # Raytracers
 
-A collection of ray tracer implementations in C++
+A collection of ray tracer implementations in C++ & CUDA (optional)
 
 ![SimplePathtracer][simple_r20]
 
@@ -19,26 +19,25 @@ To replicate the Diffuse and Roughness parameters of Blender's
 - Mesh
   - Plane, Sphere
 - Material
-  - Emission, PhongMaterial, LambertBSDF, MetalBSDF(0% roughness),
+  - PhongMaterial, LambertBSDF, MetalBSDF(0% roughness),
     DielectricBSDF(0% roughness), GlossyDiffuseLambertBSDF(thin dielectric
     microfacet coat + Lambertian substrate, GGX Distribution)
-- Light
-  - AreaLight
 - Sampler
   - RandomSampler, StratefiedSampler
 - Integrator
   - _WhittedRaytracer_ - Whitted-style recursive ray tracer, based on
     _[tinyraytracer][]_.
-    Uses PhongMaterial and PointLight.
+    Uses PhongMaterial. Light behaves as point light.
   - _RecursivePathtracer_ - Path tracer using Monte Carlo with mixed sampling,
     based on _Ray Tracing: The Rest of Your Life_ from
-    _[Ray Tracing in One Weekend][]_ series. Uses BSDF Material and AreaLight.
+    _[Ray Tracing in One Weekend][]_ series. Uses BSDF Material. Light
+    behaves as area light.
   - _SimplePathtracer_ - Path tracer using Monte Carlo with direct light
     sampling, a simplified version of _SimplePathIntegrator_ from
     _[Physically Based Rendering: From Theory To Implementation][pbrt]_.
     Most of the features in the literature, such as spectral rendering, were
     omitted for simplicity.
-    RGB rendering (as _RecursivePathtacer_), Material, and AreaLight.
+    RGB rendering (as _RecursivePathtacer_), Material, and area light.
 
 ## Development
 
@@ -46,24 +45,26 @@ To replicate the Diffuse and Roughness parameters of Blender's
 
 - Make
 - CMake
+- (optional) CUDA Toolkit (developed on 13.1)
 
 ### Build
 
 #### Linux
 
 ```bash
-mkdir build
-cd build
-cmake ..
-make
+# configure
+cmake -B build
+# cmake -B build -DUSE_CUDA # Enable GPU rendering with CUDA
+
+# build
+cmake --build build
 ```
 
 #### Windows, tested on MinGW (UCRT)
 
 ```bash
-mkdir build
+cmake -B build -G "MinGW Makefiles"
 cd build
-cmake -G "MinGW Makefiles" ..
 mingw32-make.exe
 ```
 
