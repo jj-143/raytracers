@@ -66,7 +66,7 @@ void renderWithGPU(const example::Project& project) {
   data::UploadScene(project.scene.get());
 
   // Init Rand
-  cuda_sampler::InitSampler(0, width, height);
+  cuda_sampler::InitSampler(project.config.seed, width, height);
   cuda_sampler::InitSamplerRand<<<blocks, threads>>>();
   checkCudaErrors(cudaGetLastError());
   checkCudaErrors(cudaDeviceSynchronize());
